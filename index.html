@@ -650,6 +650,15 @@
       border-radius: 50%;
       background: var(--blue-primary);
     }
+    /* Numeral current: solid blue fill + white number, no center dot */
+    .state-dot.s-current-num {
+      background: var(--blue-primary);
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+    }
     .state-dot.s-complete {
       background: var(--blue-primary);
       border: 2px solid var(--blue-primary);
@@ -898,7 +907,7 @@
               <span class="state-label">Incomplete</span>
             </div>
             <div class="state-demo">
-              <div class="state-dot s-current">2</div>
+              <div class="state-dot s-current-num">2</div>
               <span class="state-label">Current</span>
             </div>
             <div class="state-demo">
