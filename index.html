@@ -277,14 +277,40 @@
       fill: none;
     }
 
-    /* hover on clickable steps */
-    .h-step:not(.is-current):hover .h-dot.complete {
+    /* ── Partly complete ─────────────────────────────────────── */
+    .h-dot.partly-complete {
+      background: var(--blue-light);
+      border: 2px solid var(--blue-primary);
+      color: var(--blue-primary);
+      font-weight: 700;
+    }
+    .h-step.is-partly-complete .h-label { color: var(--gray-600); }
+
+    /* ── Icon swap: normal icon vs pencil on hover ──────────── */
+    .dot-normal { display: flex; align-items: center; justify-content: center; }
+    .dot-pencil { display: none; align-items: center; justify-content: center; }
+
+    /* ── Hoverable steps: complete + partly-complete ONLY ────── */
+    .h-step.is-hoverable { cursor: pointer; }
+    .h-step.is-hoverable:hover .h-dot.complete {
       background: var(--blue-hover);
       border-color: var(--blue-hover);
     }
-    .h-step:not(.is-current):hover .h-dot.incomplete {
-      border-color: var(--blue-primary);
-      color: var(--blue-primary);
+    .h-step.is-hoverable:hover .h-dot.partly-complete {
+      background: #C7D9FF;
+      border-color: var(--blue-hover);
+    }
+    .h-step.is-hoverable:hover .dot-normal { display: none; }
+    .h-step.is-hoverable:hover .dot-pencil { display: flex; }
+    .h-step.is-hoverable:hover .h-label {
+      text-decoration: underline;
+      color: var(--gray-900);
+    }
+
+    /* ── Future / incomplete steps — no pointer, no hover ────── */
+    .h-step.is-future {
+      cursor: default;
+      pointer-events: none;
     }
 
     /* ── Navigation buttons ─────────────────────────────────── */
@@ -407,6 +433,31 @@
       border: 2px solid var(--blue-primary);
       color: var(--white);
     }
+    .v-dot.partly-complete {
+      background: var(--blue-light);
+      border: 2px solid var(--blue-primary);
+      color: var(--blue-primary);
+      font-weight: 700;
+    }
+
+    /* ── Vertical hoverable steps ───────────────────────────── */
+    .v-step.is-hoverable { cursor: pointer; }
+    .v-step.is-hoverable:hover .v-dot.complete {
+      background: var(--blue-hover);
+      border-color: var(--blue-hover);
+    }
+    .v-step.is-hoverable:hover .v-dot.partly-complete {
+      background: #C7D9FF;
+      border-color: var(--blue-hover);
+    }
+    .v-step.is-hoverable:hover .dot-normal { display: none; }
+    .v-step.is-hoverable:hover .dot-pencil { display: flex; }
+    .v-step.is-hoverable:hover .v-step-title {
+      text-decoration: underline;
+      color: var(--gray-900);
+    }
+    .v-step.is-future { cursor: default; pointer-events: none; }
+    .v-step.is-partly-complete .v-step-title { color: var(--gray-600); }
 
     /* vertical connector line */
     .v-line {
@@ -717,7 +768,11 @@
             <div class="state-dot s-incomplete">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#9E9E9E" stroke-width="1.5"/></svg>
             </div>
-            <span class="state-label">Incomplete</span>
+            <span class="state-label">Incomplete<br><span style="font-size:10px;color:#bbb">(not yet reachable)</span></span>
+          </div>
+          <div class="state-demo">
+            <div class="state-dot" style="background:#E8F0FF;border:2px solid #0057FF;color:#0057FF;font-weight:700;font-size:14px">2</div>
+            <span class="state-label">Partly complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
           </div>
           <div class="state-demo">
             <div class="state-dot s-current">
@@ -729,8 +784,11 @@
             <div class="state-dot s-complete">
               <svg class="check-icon" viewBox="0 0 16 16"><polyline points="3,8 6.5,11.5 13,5"/></svg>
             </div>
-            <span class="state-label">Complete</span>
+            <span class="state-label">Complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
           </div>
+        </div>
+        <div style="margin-top:20px;padding:12px 16px;background:#FFF8E1;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#616161;max-width:520px">
+          <strong style="color:#212121">Interaction rules:</strong> Only completed and partly-completed steps are hoverable and clickable. Future (incomplete) steps require the user to click <em>Continue</em> to advance.
         </div>
 
         <div style="margin-top:40px">
@@ -823,8 +881,10 @@
 <!-- ─────────────────────── JavaScript ─────────────────────── -->
 <script>
 /* ── Helpers ──────────────────────────────────────────────── */
-const svgCheck = () => `<svg class="check-icon" viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>`;
-const svgDot   = () => `<svg viewBox="0 0 14 14" style="width:10px;height:10px;fill:white"><circle cx="7" cy="7" r="3"/></svg>`;
+const svgCheck  = () => `<svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>`;
+const svgDot    = () => `<svg viewBox="0 0 14 14" style="width:10px;height:10px;fill:white"><circle cx="7" cy="7" r="3"/></svg>`;
+const svgPencil = (color = 'white') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:none;stroke:${color};stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">
+  <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>`;
 
 const STEP_NAMES = ['Account', 'Identity', 'Coverage', 'Payment', 'Review', 'Confirm', 'Submit', 'Done'];
 const V_STEPS = [
@@ -835,61 +895,81 @@ const V_STEPS = [
   { label:'Review & Submit', desc:'Review all your information before final submission.' },
 ];
 const V_3_STEPS = [
-  { label:'Account',  desc:'Enter your credentials.' },
-  { label:'Coverage', desc:'Select your coverage plan.' },
-  { label:'Confirm',  desc:'Review and confirm your details.' },
+  { label:'Account',  desc:'Enter your credentials.',        partly: false },
+  { label:'Coverage', desc:'Select your coverage plan.',     partly: true  },
+  { label:'Confirm',  desc:'Review and confirm your details.', partly: false },
 ];
 
 /* ══════════════════════════════════════════════════════════════
    HORIZONTAL STEPPER ENGINE
-══════════════════════════════════════════════════════════════ */
-let hTotal = 5;
-let hCurrent = 0; // 0-indexed current step
 
-function buildHStepper(container, total, current, smallDot = false) {
+   Interaction rules:
+   • Future (incomplete) steps: not hoverable, not clickable.
+   • Complete + partly-complete steps: hoverable (pencil icon +
+     underlined label), clickable (jump back).
+   • Advance only via Continue button.
+══════════════════════════════════════════════════════════════ */
+let hTotal          = 5;
+let hCurrent        = 2;              // start at step 3 to show all states
+let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly complete
+
+function dotHtml(state, num, smallDot) {
+  const sz  = smallDot ? 11 : 14;
+  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  let normal;
+  if (state === 'complete')         normal = svgCheck();
+  else if (state === 'current')     normal = svgDot();
+  else if (state === 'partly-complete') normal = `<span style="font-size:${sz}px;font-weight:700">${num}</span>`;
+  else                              normal = `<span style="font-size:${sz}px">${num}</span>`;
+  return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
+}
+
+function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false) {
   container.innerHTML = '';
-  const dotSize = smallDot ? 24 : 32;
+  const dotPx = smallDot ? 24 : 32;
 
   for (let i = 0; i < total; i++) {
-    const isComplete = i < current;
-    const isCurrent  = i === current;
+    const isComplete       = i < current && !partlySet.has(i);
+    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isCurrent        = i === current;
+    const isFuture         = i > current;
 
-    // Connector (before each step except first)
+    // Connector
     if (i > 0) {
       const line = document.createElement('div');
+      // line is blue if the step to its right is current or past
       line.className = 'h-connector' + (i <= current ? ' complete' : '');
       container.appendChild(line);
     }
 
     const step = document.createElement('div');
-    step.className = 'h-step' + (isCurrent ? ' is-current' : '') + (isComplete ? ' is-complete' : '');
-    step.dataset.idx = i;
+    let cls = 'h-step';
+    if (isCurrent)        cls += ' is-current';
+    if (isComplete)       cls += ' is-complete is-hoverable';
+    if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
+    if (isFuture)         cls += ' is-future';
+    step.className = cls;
 
-    // Dot
-    const dotCls = isComplete ? 'complete' : (isCurrent ? 'current' : 'incomplete');
-    const dotContent = isComplete
-      ? svgCheck()
-      : (isCurrent ? svgDot() : (i + 1));
-
-    const name = STEP_NAMES[i] || `Step ${i + 1}`;
-    const labelWeight = isCurrent ? '700' : (isComplete ? '400' : '400');
-    const labelColor  = isCurrent ? 'var(--gray-900)' : (isComplete ? 'var(--gray-600)' : 'var(--gray-400)');
+    const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
+    const name     = STEP_NAMES[i] || `Step ${i + 1}`;
+    const lWeight  = isCurrent ? '700' : (isComplete || isPartlyComplete) ? '400' : '400';
+    const lColor   = isCurrent ? 'var(--gray-900)'
+                   : isComplete || isPartlyComplete ? 'var(--gray-600)'
+                   : 'var(--gray-400)';
 
     step.innerHTML = `
       <div class="h-step-inner">
-        <div class="h-dot ${dotCls}" style="width:${dotSize}px;height:${dotSize}px;font-size:${smallDot?11:14}px">
-          ${dotContent}
+        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px">
+          ${dotHtml(dotState, i + 1, smallDot)}
         </div>
-        <span class="h-label" style="font-weight:${labelWeight};color:${labelColor}">${name}</span>
+        <span class="h-label" style="font-weight:${lWeight};color:${lColor}">${name}</span>
       </div>
     `;
 
-    // Click to jump
-    step.addEventListener('click', () => {
-      if (!container.dataset.interactive) return;
-      hCurrent = i;
-      renderHStepper();
-    });
+    // Only complete / partly-complete steps are clickable
+    if (interactive && (isComplete || isPartlyComplete)) {
+      step.addEventListener('click', () => { hCurrent = i; renderHStepper(); });
+    }
 
     container.appendChild(step);
   }
@@ -897,108 +977,129 @@ function buildHStepper(container, total, current, smallDot = false) {
 
 function renderHStepper() {
   const container = document.getElementById('h-stepper-track');
-  container.dataset.interactive = '1';
-  buildHStepper(container, hTotal, hCurrent);
-  document.getElementById('h-progress-chip').textContent = `Step ${hCurrent + 1} of ${hTotal}`;
-  document.getElementById('h-back').disabled = hCurrent === 0;
-  document.getElementById('h-next').disabled = hCurrent === hTotal - 1;
+  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true);
+
+  const isPartly = hPartlyComplete.has(hCurrent);
+  document.getElementById('h-progress-chip').textContent =
+    `Step ${hCurrent + 1} of ${hTotal}${isPartly ? ' · partly complete' : ''}`;
+  document.getElementById('h-back').disabled    = hCurrent === 0;
+  document.getElementById('h-next').disabled    = hCurrent === hTotal - 1;
   document.getElementById('h-count-display').textContent = hTotal;
 }
 
-/* Next / Back */
+/* Continue — marks current step complete (removes from partly set) */
 document.getElementById('h-next').addEventListener('click', () => {
-  if (hCurrent < hTotal - 1) { hCurrent++; renderHStepper(); }
+  if (hCurrent < hTotal - 1) {
+    hPartlyComplete.delete(hCurrent); // fully complete when you Continue
+    hCurrent++;
+    renderHStepper();
+  }
 });
+/* Back */
 document.getElementById('h-back').addEventListener('click', () => {
   if (hCurrent > 0) { hCurrent--; renderHStepper(); }
 });
 
 /* Step count +/- */
 document.getElementById('h-inc').addEventListener('click', () => {
-  if (hTotal < 8) { hTotal++; if (hCurrent >= hTotal) hCurrent = hTotal - 1; renderHStepper(); }
+  if (hTotal < 8) { hTotal++; renderHStepper(); }
 });
 document.getElementById('h-dec').addEventListener('click', () => {
-  if (hTotal > 2) { hTotal--; if (hCurrent >= hTotal) hCurrent = hTotal - 1; renderHStepper(); }
+  if (hTotal > 2) {
+    hTotal--;
+    if (hCurrent >= hTotal) hCurrent = hTotal - 1;
+    renderHStepper();
+  }
 });
 
-/* Static variants */
+/* Static variants (non-interactive, show partly-complete) */
 function buildVariants() {
   const wrap = document.getElementById('h-variants-wrap');
   const configs = [
-    { count: 3, current: 1, label: '3 Steps · Step 2 active' },
-    { count: 5, current: 2, label: '5 Steps · Step 3 active' },
-    { count: 8, current: 4, label: '8 Steps · Step 5 active' },
+    { count: 3, current: 1, partly: new Set(),  label: '3 Steps · Step 2 current' },
+    { count: 5, current: 3, partly: new Set([1]), label: '5 Steps · Step 2 partly complete · Step 4 current' },
+    { count: 8, current: 4, partly: new Set([2]), label: '8 Steps · Step 3 partly complete · Step 5 current' },
   ];
-  configs.forEach(({ count, current, label }) => {
+  configs.forEach(({ count, current, partly, label }) => {
     const block = document.createElement('div');
     block.className = 'demo-block';
     block.innerHTML = `<div class="demo-label">${label}</div>`;
     const track = document.createElement('div');
     track.className = 'h-stepper';
-    buildHStepper(track, count, current);
+    buildHStepper(track, count, current, false, partly, false);
     block.appendChild(track);
     wrap.appendChild(block);
   });
 }
 
-/* Mobile 3-step at step 2 */
+/* Mobile 3-step (step 2 active, step 1 complete) */
 function buildMobileStepper() {
   const track = document.getElementById('mobile-stepper');
-  buildHStepper(track, 3, 1, true);
+  buildHStepper(track, 3, 1, true, new Set(), false);
 }
 
-/* Anatomy view in states tab */
+/* Anatomy view */
 function buildAnatomyStepper() {
   const el = document.getElementById('anatomy-stepper');
   el.innerHTML = '';
   el.className = 'h-stepper';
-  buildHStepper(el, 4, 1);
-
-  // Add annotation numbers
-  const steps = el.querySelectorAll('.h-step-inner');
-  const annotations = [null, '①', null, null]; // dot on step 2
-  // just add a floating number on the anatomy example
+  buildHStepper(el, 4, 2, false, new Set([1]), false);
 }
 
 /* ══════════════════════════════════════════════════════════════
    VERTICAL STEPPER ENGINE
 ══════════════════════════════════════════════════════════════ */
-let vCurrent = 0;
+let vCurrent        = 2;
+let vPartlyComplete = new Set([1]);
 
-function buildVStepper(container, steps, current, interactive = false) {
+function dotHtmlV(state, num) {
+  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  let normal;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'current')         normal = svgDot();
+  else if (state === 'partly-complete') normal = `<span style="font-size:13px;font-weight:700">${num}</span>`;
+  else                                  normal = `<span>${num}</span>`;
+  return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
+}
+
+function buildVStepper(container, steps, current, interactive = false, partlySet = new Set()) {
   container.innerHTML = '';
   steps.forEach((s, i) => {
-    const isComplete = i < current;
-    const isCurrent  = i === current;
-    const dotCls     = isComplete ? 'complete' : (isCurrent ? 'current' : 'incomplete');
-    const dotContent = isComplete
-      ? svgCheck()
-      : (isCurrent ? svgDot() : `<span>${i + 1}</span>`);
+    const isComplete       = i < current && !partlySet.has(i);
+    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isCurrent        = i === current;
+    const isFuture         = i > current;
+
+    const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
 
     const stepEl = document.createElement('div');
-    stepEl.className = 'v-step' + (isCurrent ? ' is-current' : '') + (isComplete ? ' is-complete' : '');
-    if (interactive) { stepEl.dataset.idx = i; stepEl.style.cursor = 'pointer'; }
+    let cls = 'v-step';
+    if (isCurrent)        cls += ' is-current';
+    if (isComplete)       cls += ' is-complete is-hoverable';
+    if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
+    if (isFuture)         cls += ' is-future';
+    stepEl.className = cls;
 
     const lineHtml = i < steps.length - 1
-      ? `<div class="v-line${i < current ? ' complete' : ''}"></div>`
+      ? `<div class="v-line${(isComplete || isPartlyComplete) ? ' complete' : ''}"></div>`
       : '';
 
     stepEl.innerHTML = `
       <div class="v-step-aside">
-        <div class="v-dot ${dotCls}">${dotContent}</div>
+        <div class="v-dot ${dotState}">${dotHtmlV(dotState, i + 1)}</div>
         ${lineHtml}
       </div>
       <div class="v-step-body">
-        <div class="v-step-title">${s.label}</div>
+        <div class="v-step-title">${s.label}${isPartlyComplete ? ' <span style="font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:1px 6px;border-radius:4px">Partly complete</span>' : ''}</div>
         <div class="v-step-desc">${s.desc}
           ${isCurrent && interactive ? `<div class="step-panel" style="margin-top:12px">
-            <div style="font-size:13px;color:var(--gray-600)">This is where the form or content for <strong>${s.label}</strong> would appear.</div>
+            <div style="font-size:13px;color:var(--gray-600)">Form content for <strong>${s.label}</strong> appears here.</div>
           </div>` : ''}
         </div>
       </div>
     `;
 
-    if (interactive) {
+    if (interactive && (isComplete || isPartlyComplete)) {
       stepEl.addEventListener('click', () => { vCurrent = i; renderVStepper(); });
     }
     container.appendChild(stepEl);
@@ -1006,10 +1107,12 @@ function buildVStepper(container, steps, current, interactive = false) {
 }
 
 function renderVStepper() {
-  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true);
+  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
+  const isPartly = vPartlyComplete.has(vCurrent);
   document.getElementById('v-content-panel').innerHTML = `
-    <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:8px">${V_STEPS[vCurrent].label}</div>
-    <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:20px">${V_STEPS[vCurrent].desc}</div>
+    <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
+    ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
+    <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:20px;margin-top:8px">${V_STEPS[vCurrent].desc}</div>
     <div style="background:var(--gray-100);border-radius:8px;border:1.5px dashed var(--gray-200);padding:32px;text-align:center;color:var(--gray-400);font-size:13px;">
       Form content for step ${vCurrent + 1} goes here
     </div>
@@ -1019,15 +1122,19 @@ function renderVStepper() {
 }
 
 document.getElementById('v-next').addEventListener('click', () => {
-  if (vCurrent < V_STEPS.length - 1) { vCurrent++; renderVStepper(); }
+  if (vCurrent < V_STEPS.length - 1) {
+    vPartlyComplete.delete(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  }
 });
 document.getElementById('v-back').addEventListener('click', () => {
   if (vCurrent > 0) { vCurrent--; renderVStepper(); }
 });
 
-/* 3-step static */
+/* 3-step static — step 2 is partly complete */
 function buildV3() {
-  buildVStepper(document.getElementById('v-3-track'), V_3_STEPS, 1, false);
+  buildVStepper(document.getElementById('v-3-track'), V_3_STEPS, 2, false, new Set([1]));
 }
 
 /* ══════════════════════════════════════════════════════════════
