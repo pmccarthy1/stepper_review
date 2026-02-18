@@ -384,31 +384,36 @@
     .nav-row {
       display: flex;
       gap: 12px;
-      justify-content: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 32px;
     }
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 9px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
+      gap: 4px;
+      padding: 12px 24px;
+      height: 48px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background .15s, opacity .15s;
+      transition: background .15s, opacity .15s, border-color .15s;
       border: none;
+      white-space: nowrap;
     }
     .btn-primary {
-      background: var(--blue-primary);
+      background: #281805;
       color: var(--white);
+      border: none;
     }
-    .btn-primary:hover { background: var(--blue-hover); }
+    .btn-primary:hover { background: #3d2508; }
     .btn-secondary {
       background: var(--white);
-      color: var(--gray-600);
-      border: 1.5px solid var(--gray-200);
+      color: #281805;
+      border: 2px solid #281805;
     }
-    .btn-secondary:hover { border-color: var(--blue-primary); color: var(--blue-primary); }
+    .btn-secondary:hover { background: #f5f0eb; }
     .btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
     /* Step count control */
@@ -756,8 +761,14 @@
 
           <!-- Nav buttons -->
           <div class="nav-row">
-            <button class="btn btn-secondary" id="h-back">← Back</button>
-            <button class="btn btn-primary" id="h-next">Continue →</button>
+            <button class="btn btn-secondary" id="h-back">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Back
+            </button>
+            <button class="btn btn-primary" id="h-next">
+              Next
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
 
         </div>
@@ -822,9 +833,15 @@
 
         </div>
 
-        <div class="nav-row" style="margin-top:40px;justify-content:flex-start">
-          <button class="btn btn-secondary" id="v-back">← Back</button>
-          <button class="btn btn-primary" id="v-next">Continue →</button>
+        <div class="nav-row" style="margin-top:40px">
+          <button class="btn btn-secondary" id="v-back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back
+          </button>
+          <button class="btn btn-primary" id="v-next">
+            Next
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>
 
       </div>
