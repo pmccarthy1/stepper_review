@@ -277,12 +277,11 @@
       fill: none;
     }
 
-    /* ── Partly complete ─────────────────────────────────────── */
+    /* ── Partly complete: white bg, blue border, dash icon ──── */
     .h-dot.partly-complete {
-      background: var(--blue-light);
+      background: var(--white);
       border: 2px solid var(--blue-primary);
       color: var(--blue-primary);
-      font-weight: 700;
     }
     .h-step.is-partly-complete .h-label { color: var(--gray-600); }
 
@@ -297,7 +296,7 @@
       border-color: var(--blue-hover);
     }
     .h-step.is-hoverable:hover .h-dot.partly-complete {
-      background: #C7D9FF;
+      background: var(--blue-light);
       border-color: var(--blue-hover);
     }
     .h-step.is-hoverable:hover .dot-normal { display: none; }
@@ -311,6 +310,62 @@
     .h-step.is-future {
       cursor: default;
       pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SAVE & CONTINUE MODAL
+    ══════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      padding: 32px;
+      max-width: 420px;
+      width: 90%;
+      transform: translateY(12px);
+      transition: transform .2s;
+    }
+    .modal-overlay.visible .modal { transform: translateY(0); }
+    .modal-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #FFF8E1;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .modal p {
+      font-size: 14px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
     }
 
     /* ── Navigation buttons ─────────────────────────────────── */
@@ -768,10 +823,12 @@
             <div class="state-dot s-incomplete">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#9E9E9E" stroke-width="1.5"/></svg>
             </div>
-            <span class="state-label">Incomplete<br><span style="font-size:10px;color:#bbb">(not yet reachable)</span></span>
+            <span class="state-label">Incomplete<br><span style="font-size:10px;color:#bbb">(not reachable via click)</span></span>
           </div>
           <div class="state-demo">
-            <div class="state-dot" style="background:#E8F0FF;border:2px solid #0057FF;color:#0057FF;font-weight:700;font-size:14px">2</div>
+            <div class="state-dot" style="background:white;border:2px solid #0057FF">
+              <svg viewBox="0 0 16 16" width="14" height="14"><line x1="3" y1="8" x2="13" y2="8" stroke="#0057FF" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
             <span class="state-label">Partly complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
           </div>
           <div class="state-demo">
@@ -787,8 +844,8 @@
             <span class="state-label">Complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
           </div>
         </div>
-        <div style="margin-top:20px;padding:12px 16px;background:#FFF8E1;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#616161;max-width:520px">
-          <strong style="color:#212121">Interaction rules:</strong> Only completed and partly-completed steps are hoverable and clickable. Future (incomplete) steps require the user to click <em>Continue</em> to advance.
+        <div style="margin-top:20px;padding:12px 16px;background:#FFF8E1;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#616161;max-width:540px">
+          <strong style="color:#212121">Continue flow:</strong> Clicking <em>Continue</em> shows a modal. Choose <em>"Save &amp; continue"</em> to leave the step partly complete (dash icon, returnable), or <em>"Go back &amp; finish"</em> to mark it fully complete (checkmark). Future steps are never directly clickable.
         </div>
 
         <div style="margin-top:40px">
@@ -878,13 +935,28 @@
 
 </div><!-- /page-body -->
 
+<!-- ══════════════════════════════════════════════
+     SAVE & CONTINUE MODAL
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="save-modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <h3>Save and continue?</h3>
+    <p>Some information on this step is incomplete. Your progress will be saved and this step will be marked as <strong>partly complete</strong>. You can return to finish it later.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modal-cancel">Go back &amp; finish</button>
+      <button class="btn btn-primary" id="modal-confirm">Save &amp; continue</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─────────────────────── JavaScript ─────────────────────── -->
 <script>
 /* ── Helpers ──────────────────────────────────────────────── */
 const svgCheck  = () => `<svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>`;
 const svgDot    = () => `<svg viewBox="0 0 14 14" style="width:10px;height:10px;fill:white"><circle cx="7" cy="7" r="3"/></svg>`;
-const svgPencil = (color = 'white') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:none;stroke:${color};stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">
-  <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>`;
+const svgDash   = (color = '#0057FF') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px"><line x1="3" y1="8" x2="13" y2="8" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+const svgPencil = (color = 'white') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:none;stroke:${color};stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>`;
 
 const STEP_NAMES = ['Account', 'Identity', 'Coverage', 'Payment', 'Review', 'Confirm', 'Submit', 'Done'];
 const V_STEPS = [
@@ -917,10 +989,10 @@ function dotHtml(state, num, smallDot) {
   const sz  = smallDot ? 11 : 14;
   const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
   let normal;
-  if (state === 'complete')         normal = svgCheck();
-  else if (state === 'current')     normal = svgDot();
-  else if (state === 'partly-complete') normal = `<span style="font-size:${sz}px;font-weight:700">${num}</span>`;
-  else                              normal = `<span style="font-size:${sz}px">${num}</span>`;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'current')         normal = svgDot();
+  else if (state === 'partly-complete') normal = svgDash('#0057FF');
+  else                                  normal = `<span style="font-size:${sz}px">${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
@@ -987,13 +1059,12 @@ function renderHStepper() {
   document.getElementById('h-count-display').textContent = hTotal;
 }
 
-/* Continue — marks current step complete (removes from partly set) */
+/* Continue — show modal so user decides: fully complete or partly complete */
 document.getElementById('h-next').addEventListener('click', () => {
-  if (hCurrent < hTotal - 1) {
-    hPartlyComplete.delete(hCurrent); // fully complete when you Continue
-    hCurrent++;
-    renderHStepper();
-  }
+  if (hCurrent < hTotal - 1) showModal('h');
+});
+document.getElementById('v-next').addEventListener('click', () => {
+  if (vCurrent < V_STEPS.length - 1) showModal('v');
 });
 /* Back */
 document.getElementById('h-back').addEventListener('click', () => {
@@ -1057,7 +1128,7 @@ function dotHtmlV(state, num) {
   let normal;
   if (state === 'complete')             normal = svgCheck();
   else if (state === 'current')         normal = svgDot();
-  else if (state === 'partly-complete') normal = `<span style="font-size:13px;font-weight:700">${num}</span>`;
+  else if (state === 'partly-complete') normal = svgDash('#0057FF');
   else                                  normal = `<span>${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
@@ -1121,13 +1192,7 @@ function renderVStepper() {
   document.getElementById('v-next').disabled = vCurrent === V_STEPS.length - 1;
 }
 
-document.getElementById('v-next').addEventListener('click', () => {
-  if (vCurrent < V_STEPS.length - 1) {
-    vPartlyComplete.delete(vCurrent);
-    vCurrent++;
-    renderVStepper();
-  }
-});
+// v-next wired through modal above
 document.getElementById('v-back').addEventListener('click', () => {
   if (vCurrent > 0) { vCurrent--; renderVStepper(); }
 });
@@ -1136,6 +1201,56 @@ document.getElementById('v-back').addEventListener('click', () => {
 function buildV3() {
   buildVStepper(document.getElementById('v-3-track'), V_3_STEPS, 2, false, new Set([1]));
 }
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL LOGIC
+   Continue button shows modal. User chooses:
+   - "Save & continue" → current step becomes partly-complete
+   - "Go back & finish" → stays on current step (fully complete on next Continue)
+══════════════════════════════════════════════════════════════ */
+let pendingModalStepper = null; // 'h' or 'v'
+
+function showModal(which) {
+  pendingModalStepper = which;
+  document.getElementById('save-modal').classList.add('visible');
+}
+function hideModal() {
+  document.getElementById('save-modal').classList.remove('visible');
+  pendingModalStepper = null;
+}
+
+// "Save & continue" — marks current step as partly complete
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  if (pendingModalStepper === 'h') {
+    hPartlyComplete.add(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (pendingModalStepper === 'v') {
+    vPartlyComplete.add(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  }
+  hideModal();
+});
+
+// "Go back & finish" — advance without partly-complete (fully complete)
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  if (pendingModalStepper === 'h') {
+    hPartlyComplete.delete(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (pendingModalStepper === 'v') {
+    vPartlyComplete.delete(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  }
+  hideModal();
+});
+
+// Close on overlay click
+document.getElementById('save-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) hideModal();
+});
 
 /* ══════════════════════════════════════════════════════════════
    TAB SWITCHING
