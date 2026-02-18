@@ -236,12 +236,12 @@
       color: var(--gray-400);
     }
 
-    /* Active / current  (Proposed style: outer ring) */
+    /* Active / current: transparent bg, blue ring, blue center dot */
     .h-dot.current {
-      background: var(--blue-primary);
-      border: 3px solid var(--white);
-      box-shadow: 0 0 0 3px var(--blue-primary);
-      color: var(--white);
+      background: transparent;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
     }
 
     /* Complete */
@@ -478,10 +478,10 @@
       color: var(--gray-400);
     }
     .v-dot.current {
-      background: var(--blue-primary);
-      border: 3px solid var(--white);
-      box-shadow: 0 0 0 3px var(--blue-primary);
-      color: var(--white);
+      background: transparent;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
     }
     .v-dot.complete {
       background: var(--blue-primary);
@@ -603,10 +603,10 @@
       color: var(--gray-400);
     }
     .state-dot.s-current {
-      background: var(--blue-primary);
-      border: 3px solid var(--white);
-      box-shadow: 0 0 0 3px var(--blue-primary);
-      color: var(--white);
+      background: transparent;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
     }
     .state-dot.s-complete {
       background: var(--blue-primary);
@@ -833,20 +833,10 @@
           </div>
           <div class="state-demo">
             <div class="state-dot s-current">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="3" fill="white"/></svg>
+              <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#0057FF"/></svg>
             </div>
             <span class="state-label">Current</span>
           </div>
-          <div class="state-demo">
-            <div class="state-dot s-complete">
-              <svg class="check-icon" viewBox="0 0 16 16"><polyline points="3,8 6.5,11.5 13,5"/></svg>
-            </div>
-            <span class="state-label">Complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
-          </div>
-        </div>
-        <div style="margin-top:20px;padding:12px 16px;background:#FFF8E1;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#616161;max-width:540px">
-          <strong style="color:#212121">Continue flow:</strong> Clicking <em>Continue</em> shows a modal. Choose <em>"Save &amp; continue"</em> to leave the step partly complete (dash icon, returnable), or <em>"Go back &amp; finish"</em> to mark it fully complete (checkmark). Future steps are never directly clickable.
-        </div>
 
         <div style="margin-top:40px">
           <div class="states-section-title">Numeral variant</div>
