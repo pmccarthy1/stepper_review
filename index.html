@@ -236,12 +236,21 @@
       color: var(--gray-400);
     }
 
-    /* Active / current: transparent bg, blue ring, blue center dot */
+    /* Active / current: white bg, blue ring, blue center dot via ::after */
     .h-dot.current {
-      background: transparent;
+      background: white;
       border: 2px solid var(--blue-primary);
       box-shadow: none;
       color: var(--blue-primary);
+    }
+    .h-dot.current::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+      pointer-events: none;
     }
 
     /* Complete */
@@ -478,10 +487,19 @@
       color: var(--gray-400);
     }
     .v-dot.current {
-      background: transparent;
+      background: white;
       border: 2px solid var(--blue-primary);
       box-shadow: none;
       color: var(--blue-primary);
+    }
+    .v-dot.current::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+      pointer-events: none;
     }
     .v-dot.complete {
       background: var(--blue-primary);
@@ -603,10 +621,19 @@
       color: var(--gray-400);
     }
     .state-dot.s-current {
-      background: transparent;
+      background: white;
       border: 2px solid var(--blue-primary);
       box-shadow: none;
       color: var(--blue-primary);
+      position: relative;
+    }
+    .state-dot.s-current::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
     }
     .state-dot.s-complete {
       background: var(--blue-primary);
@@ -832,9 +859,7 @@
             <span class="state-label">Partly complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
           </div>
           <div class="state-demo">
-            <div class="state-dot s-current">
-              <svg viewBox="0 0 14 14" style="width:8px;height:8px"><circle cx="7" cy="7" r="3" fill="#0057FF"/></svg>
-            </div>
+            <div class="state-dot s-current"></div>
             <span class="state-label">Current</span>
           </div>
 
@@ -944,7 +969,7 @@
 <script>
 /* ── Helpers ──────────────────────────────────────────────── */
 const svgCheck  = () => `<svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>`;
-const svgDot    = () => `<svg viewBox="0 0 14 14" style="width:10px;height:10px"><circle cx="7" cy="7" r="3" fill="#0057FF"/></svg>`;
+const svgDot    = () => ``; // center dot rendered via CSS ::after on .current
 const svgDash   = (color = '#0057FF') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px"><line x1="3" y1="8" x2="13" y2="8" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
 const svgPencil = (color = 'white') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:none;stroke:${color};stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>`;
 
