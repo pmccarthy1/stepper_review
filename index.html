@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequoia Stepper Component – Stakeholder Prototype</title>
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-primary:    #0057FF;
+      --blue-hover:      #0041CC;
+      --blue-light:      #E8F0FF;
+      --gray-100:        #F5F5F5;
+      --gray-200:        #E0E0E0;
+      --gray-400:        #9E9E9E;
+      --gray-600:        #616161;
+      --gray-900:        #212121;
+      --green-complete:  #0057FF;
+      --white:           #FFFFFF;
+      --font:            'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --dot-size:        32px;
+      --dot-size-sm:     24px;
+      --line-thickness:  4px;
+      --radius:          50%;
+      --step-gap:        0px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #F0F2F5;
+      color: var(--gray-900);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 20px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .page-header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    .page-header .badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--blue-light);
+      color: var(--blue-primary);
+      padding: 3px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .page-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* ── Section Card ──────────────────────────────────────── */
+    .section-card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 20px 32px 16px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .section-header .variant-tag {
+      font-size: 11px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .section-body {
+      padding: 40px 32px 48px;
+    }
+
+    /* ── Tab Nav ──────────────────────────────────────────── */
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--gray-200);
+      margin-bottom: 40px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-400);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active {
+      color: var(--blue-primary);
+      border-bottom-color: var(--blue-primary);
+      font-weight: 600;
+    }
+    .tab-btn:hover:not(.active) { color: var(--gray-600); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ══════════════════════════════════════════════════════════
+       HORIZONTAL STEPPER
+    ══════════════════════════════════════════════════════════ */
+    .h-stepper-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* interactive demo wrapper */
+    .demo-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+    .demo-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--gray-400);
+      font-weight: 600;
+      align-self: flex-start;
+    }
+
+    /* the stepper track */
+    .h-stepper {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .h-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+      cursor: pointer;
+    }
+
+    /* connector line between steps */
+    .h-step-track {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      position: relative;
+    }
+    .h-step-track::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: var(--line-thickness);
+      background: var(--gray-200);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .h-step-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Lines between dots */
+    .h-connector {
+      flex: 1;
+      height: var(--line-thickness);
+      background: var(--gray-200);
+      position: relative;
+      margin-top: calc(var(--dot-size) / 2 - var(--line-thickness) / 2);
+      transition: background .3s;
+    }
+    .h-connector.complete { background: var(--blue-primary); }
+
+    /* Dot */
+    .h-dot {
+      width: var(--dot-size);
+      height: var(--dot-size);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      transition: all .2s;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Incomplete */
+    .h-dot.incomplete {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      color: var(--gray-400);
+    }
+
+    /* Active / current: white bg, blue ring, blue center dot via ::after */
+    .h-dot.current {
+      background: white;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
+    }
+    .h-dot.current::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+      pointer-events: none;
+    }
+
+    /* Complete */
+    .h-dot.complete {
+      background: var(--blue-primary);
+      border: 2px solid var(--blue-primary);
+      color: var(--white);
+    }
+
+    /* Step label */
+    .h-label {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--gray-400);
+      white-space: nowrap;
+      text-align: center;
+      transition: color .2s, font-weight .2s;
+    }
+    .h-step.is-current .h-label {
+      color: var(--gray-900);
+      font-weight: 700;
+    }
+    .h-step.is-complete .h-label { color: var(--gray-600); }
+
+    /* Checkmark SVG */
+    .check-icon {
+      width: 16px;
+      height: 16px;
+      stroke: white;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* ── Partly complete: white bg, blue border, dash icon ──── */
+    .h-dot.partly-complete {
+      background: var(--white);
+      border: 2px solid var(--blue-primary);
+      color: var(--blue-primary);
+    }
+    .h-step.is-partly-complete .h-label { color: var(--gray-600); }
+
+    /* ── Icon swap: normal icon vs pencil on hover ──────────── */
+    .dot-normal { display: flex; align-items: center; justify-content: center; }
+    .dot-pencil { display: none; align-items: center; justify-content: center; }
+
+    /* ── Hoverable steps: complete + partly-complete ONLY ────── */
+    .h-step.is-hoverable { cursor: pointer; }
+    .h-step.is-hoverable:hover .h-dot.complete {
+      background: var(--blue-hover);
+      border-color: var(--blue-hover);
+    }
+    .h-step.is-hoverable:hover .h-dot.partly-complete {
+      background: var(--blue-light);
+      border-color: var(--blue-hover);
+    }
+    .h-step.is-hoverable:hover .dot-normal { display: none; }
+    .h-step.is-hoverable:hover .dot-pencil { display: flex; }
+    .h-step.is-hoverable:hover .h-label {
+      text-decoration: underline;
+      color: var(--gray-900);
+    }
+
+    /* ── Future / incomplete steps — no pointer, no hover ────── */
+    .h-step.is-future {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SAVE & CONTINUE MODAL
+    ══════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      padding: 32px;
+      max-width: 420px;
+      width: 90%;
+      transform: translateY(12px);
+      transition: transform .2s;
+    }
+    .modal-overlay.visible .modal { transform: translateY(0); }
+    .modal-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #FFF8E1;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .modal p {
+      font-size: 14px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* ── Navigation buttons ─────────────────────────────────── */
+    .nav-row {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 32px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 24px;
+      height: 48px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, opacity .15s, border-color .15s;
+      border: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #281805;
+      color: var(--white);
+      border: none;
+    }
+    .btn-primary:hover { background: #3d2508; }
+    .btn-secondary {
+      background: var(--white);
+      color: #281805;
+      border: 2px solid #281805;
+    }
+    .btn-secondary:hover { background: #f5f0eb; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+    /* Step count control */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--gray-100);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+    .controls-row label { font-weight: 600; }
+    .step-count-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-600);
+      transition: border-color .15s;
+    }
+    .step-count-btn:hover { border-color: var(--blue-primary); color: var(--blue-primary); }
+    .step-count-val { font-weight: 700; color: var(--gray-900); min-width: 20px; text-align: center; }
+
+    /* progress info */
+    .progress-chip {
+      font-size: 12px;
+      background: var(--blue-light);
+      color: var(--blue-primary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       VERTICAL STEPPER
+    ══════════════════════════════════════════════════════════ */
+    .v-stepper {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .v-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .v-step-aside {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .v-dot {
+      width: var(--dot-size);
+      height: var(--dot-size);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all .2s;
+    }
+    .v-dot.incomplete {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      color: var(--gray-400);
+    }
+    .v-dot.current {
+      background: white;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
+    }
+    .v-dot.current::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+      pointer-events: none;
+    }
+    .v-dot.complete {
+      background: var(--blue-primary);
+      border: 2px solid var(--blue-primary);
+      color: var(--white);
+    }
+    .v-dot.partly-complete {
+      background: var(--blue-light);
+      border: 2px solid var(--blue-primary);
+      color: var(--blue-primary);
+      font-weight: 700;
+    }
+
+    /* ── Vertical hoverable steps ───────────────────────────── */
+    .v-step.is-hoverable { cursor: pointer; }
+    .v-step.is-hoverable:hover .v-dot.complete {
+      background: var(--blue-hover);
+      border-color: var(--blue-hover);
+    }
+    .v-step.is-hoverable:hover .v-dot.partly-complete {
+      background: #C7D9FF;
+      border-color: var(--blue-hover);
+    }
+    .v-step.is-hoverable:hover .dot-normal { display: none; }
+    .v-step.is-hoverable:hover .dot-pencil { display: flex; }
+    .v-step.is-hoverable:hover .v-step-title {
+      text-decoration: underline;
+      color: var(--gray-900);
+    }
+    .v-step.is-future { cursor: default; pointer-events: none; }
+    .v-step.is-partly-complete .v-step-title { color: var(--gray-600); }
+
+    /* vertical connector line */
+    .v-line {
+      width: var(--line-thickness);
+      flex: 1;
+      min-height: 40px;
+      background: var(--gray-200);
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: background .3s;
+    }
+    .v-line.complete { background: var(--blue-primary); }
+
+    /* step body (title + description) */
+    .v-step-body {
+      padding-top: 4px;
+      padding-bottom: 40px;
+      flex: 1;
+    }
+    .v-step:last-child .v-step-body { padding-bottom: 0; }
+
+    .v-step-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-400);
+      transition: color .2s;
+    }
+    .v-step.is-current .v-step-title { color: var(--gray-900); font-weight: 700; }
+    .v-step.is-complete .v-step-title { color: var(--gray-600); }
+
+    .v-step-desc {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--gray-400);
+      line-height: 1.5;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, opacity .3s;
+      opacity: 0;
+    }
+    .v-step.is-current .v-step-desc {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    /* ── Content area (step form / panel) ──────────────────── */
+    .step-panel {
+      background: var(--gray-100);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+    .step-panel-nav {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    /* ── Showcase grid of static states ───────────────────── */
+    .states-grid {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .state-demo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .state-demo .state-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .state-dot.s-incomplete {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      color: var(--gray-400);
+    }
+    .state-dot.s-current {
+      background: white;
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: var(--blue-primary);
+      position: relative;
+    }
+    .state-dot.s-current::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+    }
+    /* Numeral current: solid blue fill + white number, no center dot */
+    .state-dot.s-current-num {
+      background: var(--blue-primary);
+      border: 2px solid var(--blue-primary);
+      box-shadow: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .state-dot.s-complete {
+      background: var(--blue-primary);
+      border: 2px solid var(--blue-primary);
+      color: var(--white);
+    }
+    .state-label {
+      font-size: 11px;
+      color: var(--gray-400);
+      text-align: center;
+    }
+    .divider {
+      width: 1px;
+      height: 48px;
+      background: var(--gray-200);
+      align-self: center;
+    }
+    .states-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Mobile stepper variant ───────────────────────────── */
+    .mobile-demo {
+      max-width: 375px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--white);
+    }
+    .mobile-demo .app-bar {
+      background: var(--blue-primary);
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .mobile-demo .mobile-body { padding: 24px 16px; }
+    .mobile-demo .h-stepper { gap: 0; }
+    .mobile-demo .h-dot {
+      width: var(--dot-size-sm);
+      height: var(--dot-size-sm);
+      font-size: 11px;
+    }
+    .mobile-demo .h-connector { margin-top: calc(var(--dot-size-sm)/2 - var(--line-thickness)/2); }
+    .mobile-demo .h-label { font-size: 10px; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .page-header { padding: 16px 20px; }
+      .section-body { padding: 24px 16px 32px; }
+      .h-label { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─────────────────────── Page Header ─────────────────────── -->
+<header class="page-header">
+  <h1>Sequoia Design System &nbsp;·&nbsp; Stepper Component</h1>
+  <span class="badge">Stakeholder Review Prototype</span>
+</header>
+
+<div class="page-body">
+
+  <!-- ══════════════════════════════════════════════
+       TAB NAV
+  ══════════════════════════════════════════════ -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="horizontal">Horizontal Stepper</button>
+    <button class="tab-btn" data-tab="vertical">Vertical Stepper</button>
+    <button class="tab-btn" data-tab="states">Anatomy &amp; States</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 1 – HORIZONTAL
+  ══════════════════════════════════════════════ -->
+  <div class="tab-pane active" id="tab-horizontal">
+
+    <!-- Interactive Demo -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Interactive Demo</h2>
+        <span class="variant-tag">Rebrand · Desktop</span>
+      </div>
+      <div class="section-body">
+
+        <div class="demo-block">
+
+          <!-- Controls -->
+          <div class="controls-row">
+            <label>Steps:</label>
+            <button class="step-count-btn" id="h-dec">−</button>
+            <span class="step-count-val" id="h-count-display">5</span>
+            <button class="step-count-btn" id="h-inc">+</button>
+            <span style="margin-left:8px">|</span>
+            <span class="progress-chip" id="h-progress-chip">Step 1 of 5</span>
+          </div>
+
+          <!-- Stepper track -->
+          <div style="width:100%">
+            <div class="h-stepper" id="h-stepper-track"></div>
+          </div>
+
+          <!-- Nav buttons -->
+          <div class="nav-row">
+            <button class="btn btn-secondary" id="h-back">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Back
+            </button>
+            <button class="btn btn-primary" id="h-next">
+              Next
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Step count showcase -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Step Count Variants</h2>
+        <span class="variant-tag">Static preview</span>
+      </div>
+      <div class="section-body">
+        <div class="h-stepper-wrap" id="h-variants-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Mobile Breakpoint</h2>
+        <span class="variant-tag">375px viewport</span>
+      </div>
+      <div class="section-body" style="display:flex;justify-content:center">
+        <div class="mobile-demo">
+          <div class="app-bar">Example Flow</div>
+          <div class="mobile-body">
+            <div class="h-stepper" id="mobile-stepper"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-horizontal -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2 – VERTICAL
+  ══════════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-vertical">
+
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Interactive Vertical Stepper</h2>
+        <span class="variant-tag">5 Steps · Rebrand</span>
+      </div>
+      <div class="section-body">
+
+        <div style="display:flex;gap:64px;flex-wrap:wrap;align-items:flex-start">
+
+          <!-- Left: stepper -->
+          <div style="flex:0 0 260px">
+            <div class="v-stepper" id="v-stepper-track"></div>
+          </div>
+
+          <!-- Right: content panel -->
+          <div style="flex:1;min-width:240px;padding-top:4px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-400);font-weight:600;margin-bottom:12px">Active Step Content</div>
+            <div id="v-content-panel">
+              <!-- injected by JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-row" style="margin-top:40px">
+          <button class="btn btn-secondary" id="v-back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back
+          </button>
+          <button class="btn btn-primary" id="v-next">
+            Next
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3-step variant -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>3-Step Vertical Variant</h2>
+        <span class="variant-tag">Static preview</span>
+      </div>
+      <div class="section-body">
+        <div class="v-stepper" id="v-3-track"></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-vertical -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 3 – ANATOMY & STATES
+  ══════════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-states">
+
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Step Dot States</h2>
+      </div>
+      <div class="section-body">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-400);font-weight:600;margin-bottom:24px">Default variant (icon)</div>
+        <div class="states-grid">
+          <div class="state-demo">
+            <div class="state-dot s-incomplete">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#9E9E9E" stroke-width="1.5"/></svg>
+            </div>
+            <span class="state-label">Incomplete<br><span style="font-size:10px;color:#bbb">(not reachable via click)</span></span>
+          </div>
+          <div class="state-demo">
+            <div class="state-dot" style="background:white;border:2px solid #0057FF">
+              <svg viewBox="0 0 16 16" width="14" height="14"><line x1="3" y1="8" x2="13" y2="8" stroke="#0057FF" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <span class="state-label">Partly complete<br><span style="font-size:10px;color:#bbb">(hover → pencil)</span></span>
+          </div>
+          <div class="state-demo">
+            <div class="state-dot s-current"></div>
+            <span class="state-label">Current</span>
+          </div>
+
+        <div style="margin-top:40px">
+          <div class="states-section-title">Numeral variant</div>
+          <div class="states-grid">
+            <div class="state-demo">
+              <div class="state-dot s-incomplete">1</div>
+              <span class="state-label">Incomplete</span>
+            </div>
+            <div class="state-demo">
+              <div class="state-dot s-current-num">2</div>
+              <span class="state-label">Current</span>
+            </div>
+            <div class="state-demo">
+              <div class="state-dot s-complete">
+                <svg class="check-icon" viewBox="0 0 16 16"><polyline points="3,8 6.5,11.5 13,5"/></svg>
+              </div>
+              <span class="state-label">Complete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- connector states -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Connector Line States</h2>
+      </div>
+      <div class="section-body">
+        <div class="states-grid">
+          <div class="state-demo" style="flex-direction:row;align-items:center;gap:8px">
+            <div style="width:80px;height:4px;background:var(--gray-200);border-radius:2px"></div>
+            <span class="state-label">Incomplete</span>
+          </div>
+          <div class="state-demo" style="flex-direction:row;align-items:center;gap:8px">
+            <div style="width:80px;height:4px;background:var(--blue-primary);border-radius:2px"></div>
+            <span class="state-label">Complete</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- anatomy diagram -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Anatomy</h2>
+      </div>
+      <div class="section-body">
+        <div id="anatomy-stepper" style="width:100%;max-width:640px"></div>
+        <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--gray-600);">
+          <div>① <strong>Step dot</strong> – Indicates step status (incomplete / current / complete)</div>
+          <div>② <strong>Connector line</strong> – Visually links steps; color reflects progress</div>
+          <div>③ <strong>Step label</strong> – Text below dot; bold when current</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- color specs -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Color Tokens</h2>
+      </div>
+      <div class="section-body">
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:420px">
+          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
+            <div style="width:32px;height:32px;border-radius:6px;background:#0057FF;flex-shrink:0"></div>
+            <div><strong>--blue-primary</strong> · #0057FF<br><span style="color:var(--gray-400);font-size:11px">Current dot fill / Complete dot fill / Complete line</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
+            <div style="width:32px;height:32px;border-radius:6px;background:#E0E0E0;flex-shrink:0"></div>
+            <div><strong>--gray-200</strong> · #E0E0E0<br><span style="color:var(--gray-400);font-size:11px">Incomplete dot border / Incomplete line</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
+            <div style="width:32px;height:32px;border-radius:6px;background:#9E9E9E;flex-shrink:0"></div>
+            <div><strong>--gray-400</strong> · #9E9E9E<br><span style="color:var(--gray-400);font-size:11px">Incomplete label / Incomplete numeral</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
+            <div style="width:32px;height:32px;border-radius:6px;background:#212121;flex-shrink:0"></div>
+            <div><strong>--gray-900</strong> · #212121<br><span style="color:var(--gray-400);font-size:11px">Current step label (bold)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-states -->
+
+</div><!-- /page-body -->
+
+<!-- ══════════════════════════════════════════════
+     SAVE & CONTINUE MODAL
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="save-modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <h3>Save and continue?</h3>
+    <p>Some information on this step is incomplete. Your progress will be saved and this step will be marked as <strong>partly complete</strong>. You can return to finish it later.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modal-cancel">Go back &amp; finish</button>
+      <button class="btn btn-primary" id="modal-confirm">Save &amp; continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────── JavaScript ─────────────────────── -->
+<script>
+/* ── Helpers ──────────────────────────────────────────────── */
+const svgCheck  = () => `<svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>`;
+const svgDot    = () => ``; // center dot rendered via CSS ::after on .current
+const svgDash   = (color = '#0057FF') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px"><line x1="3" y1="8" x2="13" y2="8" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+const svgPencil = (color = 'white') => `<svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:none;stroke:${color};stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>`;
+
+const STEP_NAMES = ['Account', 'Identity', 'Coverage', 'Payment', 'Review', 'Confirm', 'Submit', 'Done'];
+const V_STEPS = [
+  { label:'Account Setup',   desc:'Enter your account credentials and contact information.' },
+  { label:'Identity Verify', desc:'Confirm your identity using your policy number or SSN.' },
+  { label:'Coverage Details',desc:'Select or review the coverage plan for your policy.' },
+  { label:'Payment Method',  desc:'Add a bank account or credit card for recurring payments.' },
+  { label:'Review & Submit', desc:'Review all your information before final submission.' },
+];
+const V_3_STEPS = [
+  { label:'Account',  desc:'Enter your credentials.',        partly: false },
+  { label:'Coverage', desc:'Select your coverage plan.',     partly: true  },
+  { label:'Confirm',  desc:'Review and confirm your details.', partly: false },
+];
+
+/* ══════════════════════════════════════════════════════════════
+   HORIZONTAL STEPPER ENGINE
+
+   Interaction rules:
+   • Future (incomplete) steps: not hoverable, not clickable.
+   • Complete + partly-complete steps: hoverable (pencil icon +
+     underlined label), clickable (jump back).
+   • Advance only via Continue button.
+══════════════════════════════════════════════════════════════ */
+let hTotal          = 5;
+let hCurrent        = 2;              // start at step 3 to show all states
+let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly complete
+
+function dotHtml(state, num, smallDot) {
+  const sz  = smallDot ? 11 : 14;
+  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  let normal;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'current')         normal = svgDot();
+  else if (state === 'partly-complete') normal = svgDash('#0057FF');
+  else                                  normal = `<span style="font-size:${sz}px">${num}</span>`;
+  return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
+}
+
+function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false) {
+  container.innerHTML = '';
+  const dotPx = smallDot ? 24 : 32;
+
+  for (let i = 0; i < total; i++) {
+    const isComplete       = i < current && !partlySet.has(i);
+    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isCurrent        = i === current;
+    const isFuture         = i > current;
+
+    // Connector
+    if (i > 0) {
+      const line = document.createElement('div');
+      // line is blue if the step to its right is current or past
+      line.className = 'h-connector' + (i <= current ? ' complete' : '');
+      container.appendChild(line);
+    }
+
+    const step = document.createElement('div');
+    let cls = 'h-step';
+    if (isCurrent)        cls += ' is-current';
+    if (isComplete)       cls += ' is-complete is-hoverable';
+    if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
+    if (isFuture)         cls += ' is-future';
+    step.className = cls;
+
+    const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
+    const name     = STEP_NAMES[i] || `Step ${i + 1}`;
+    const lWeight  = isCurrent ? '700' : (isComplete || isPartlyComplete) ? '400' : '400';
+    const lColor   = isCurrent ? 'var(--gray-900)'
+                   : isComplete || isPartlyComplete ? 'var(--gray-600)'
+                   : 'var(--gray-400)';
+
+    step.innerHTML = `
+      <div class="h-step-inner">
+        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px">
+          ${dotHtml(dotState, i + 1, smallDot)}
+        </div>
+        <span class="h-label" style="font-weight:${lWeight};color:${lColor}">${name}</span>
+      </div>
+    `;
+
+    // Only complete / partly-complete steps are clickable
+    if (interactive && (isComplete || isPartlyComplete)) {
+      step.addEventListener('click', () => { hCurrent = i; renderHStepper(); });
+    }
+
+    container.appendChild(step);
+  }
+}
+
+function renderHStepper() {
+  const container = document.getElementById('h-stepper-track');
+  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true);
+
+  const isPartly = hPartlyComplete.has(hCurrent);
+  document.getElementById('h-progress-chip').textContent =
+    `Step ${hCurrent + 1} of ${hTotal}${isPartly ? ' · partly complete' : ''}`;
+  document.getElementById('h-back').disabled    = hCurrent === 0;
+  document.getElementById('h-next').disabled    = hCurrent === hTotal - 1;
+  document.getElementById('h-count-display').textContent = hTotal;
+}
+
+/* Continue — show modal so user decides: fully complete or partly complete */
+document.getElementById('h-next').addEventListener('click', () => {
+  if (hCurrent < hTotal - 1) showModal('h');
+});
+document.getElementById('v-next').addEventListener('click', () => {
+  if (vCurrent < V_STEPS.length - 1) showModal('v');
+});
+/* Back */
+document.getElementById('h-back').addEventListener('click', () => {
+  if (hCurrent > 0) { hCurrent--; renderHStepper(); }
+});
+
+/* Step count +/- */
+document.getElementById('h-inc').addEventListener('click', () => {
+  if (hTotal < 8) { hTotal++; renderHStepper(); }
+});
+document.getElementById('h-dec').addEventListener('click', () => {
+  if (hTotal > 2) {
+    hTotal--;
+    if (hCurrent >= hTotal) hCurrent = hTotal - 1;
+    renderHStepper();
+  }
+});
+
+/* Static variants (non-interactive, show partly-complete) */
+function buildVariants() {
+  const wrap = document.getElementById('h-variants-wrap');
+  const configs = [
+    { count: 3, current: 1, partly: new Set(),  label: '3 Steps · Step 2 current' },
+    { count: 5, current: 3, partly: new Set([1]), label: '5 Steps · Step 2 partly complete · Step 4 current' },
+    { count: 8, current: 4, partly: new Set([2]), label: '8 Steps · Step 3 partly complete · Step 5 current' },
+  ];
+  configs.forEach(({ count, current, partly, label }) => {
+    const block = document.createElement('div');
+    block.className = 'demo-block';
+    block.innerHTML = `<div class="demo-label">${label}</div>`;
+    const track = document.createElement('div');
+    track.className = 'h-stepper';
+    buildHStepper(track, count, current, false, partly, false);
+    block.appendChild(track);
+    wrap.appendChild(block);
+  });
+}
+
+/* Mobile 3-step (step 2 active, step 1 complete) */
+function buildMobileStepper() {
+  const track = document.getElementById('mobile-stepper');
+  buildHStepper(track, 3, 1, true, new Set(), false);
+}
+
+/* Anatomy view */
+function buildAnatomyStepper() {
+  const el = document.getElementById('anatomy-stepper');
+  el.innerHTML = '';
+  el.className = 'h-stepper';
+  buildHStepper(el, 4, 2, false, new Set([1]), false);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VERTICAL STEPPER ENGINE
+══════════════════════════════════════════════════════════════ */
+let vCurrent        = 2;
+let vPartlyComplete = new Set([1]);
+
+function dotHtmlV(state, num) {
+  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  let normal;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'current')         normal = svgDot();
+  else if (state === 'partly-complete') normal = svgDash('#0057FF');
+  else                                  normal = `<span>${num}</span>`;
+  return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
+}
+
+function buildVStepper(container, steps, current, interactive = false, partlySet = new Set()) {
+  container.innerHTML = '';
+  steps.forEach((s, i) => {
+    const isComplete       = i < current && !partlySet.has(i);
+    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isCurrent        = i === current;
+    const isFuture         = i > current;
+
+    const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
+
+    const stepEl = document.createElement('div');
+    let cls = 'v-step';
+    if (isCurrent)        cls += ' is-current';
+    if (isComplete)       cls += ' is-complete is-hoverable';
+    if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
+    if (isFuture)         cls += ' is-future';
+    stepEl.className = cls;
+
+    const lineHtml = i < steps.length - 1
+      ? `<div class="v-line${(isComplete || isPartlyComplete) ? ' complete' : ''}"></div>`
+      : '';
+
+    stepEl.innerHTML = `
+      <div class="v-step-aside">
+        <div class="v-dot ${dotState}">${dotHtmlV(dotState, i + 1)}</div>
+        ${lineHtml}
+      </div>
+      <div class="v-step-body">
+        <div class="v-step-title">${s.label}${isPartlyComplete ? ' <span style="font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:1px 6px;border-radius:4px">Partly complete</span>' : ''}</div>
+        <div class="v-step-desc">${s.desc}
+          ${isCurrent && interactive ? `<div class="step-panel" style="margin-top:12px">
+            <div style="font-size:13px;color:var(--gray-600)">Form content for <strong>${s.label}</strong> appears here.</div>
+          </div>` : ''}
+        </div>
+      </div>
+    `;
+
+    if (interactive && (isComplete || isPartlyComplete)) {
+      stepEl.addEventListener('click', () => { vCurrent = i; renderVStepper(); });
+    }
+    container.appendChild(stepEl);
+  });
+}
+
+function renderVStepper() {
+  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
+  const isPartly = vPartlyComplete.has(vCurrent);
+  document.getElementById('v-content-panel').innerHTML = `
+    <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
+    ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
+    <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:20px;margin-top:8px">${V_STEPS[vCurrent].desc}</div>
+    <div style="background:var(--gray-100);border-radius:8px;border:1.5px dashed var(--gray-200);padding:32px;text-align:center;color:var(--gray-400);font-size:13px;">
+      Form content for step ${vCurrent + 1} goes here
+    </div>
+  `;
+  document.getElementById('v-back').disabled = vCurrent === 0;
+  document.getElementById('v-next').disabled = vCurrent === V_STEPS.length - 1;
+}
+
+// v-next wired through modal above
+document.getElementById('v-back').addEventListener('click', () => {
+  if (vCurrent > 0) { vCurrent--; renderVStepper(); }
+});
+
+/* 3-step static — step 2 is partly complete */
+function buildV3() {
+  buildVStepper(document.getElementById('v-3-track'), V_3_STEPS, 2, false, new Set([1]));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL LOGIC
+   Continue button shows modal. User chooses:
+   - "Save & continue" → current step becomes partly-complete
+   - "Go back & finish" → stays on current step (fully complete on next Continue)
+══════════════════════════════════════════════════════════════ */
+let pendingModalStepper = null; // 'h' or 'v'
+
+function showModal(which) {
+  pendingModalStepper = which;
+  document.getElementById('save-modal').classList.add('visible');
+}
+function hideModal() {
+  document.getElementById('save-modal').classList.remove('visible');
+  pendingModalStepper = null;
+}
+
+// "Save & continue" — marks current step as partly complete
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  if (pendingModalStepper === 'h') {
+    hPartlyComplete.add(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (pendingModalStepper === 'v') {
+    vPartlyComplete.add(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  }
+  hideModal();
+});
+
+// "Go back & finish" — advance without partly-complete (fully complete)
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  if (pendingModalStepper === 'h') {
+    hPartlyComplete.delete(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (pendingModalStepper === 'v') {
+    vPartlyComplete.delete(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  }
+  hideModal();
+});
+
+// Close on overlay click
+document.getElementById('save-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) hideModal();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════ */
+renderHStepper();
+buildVariants();
+buildMobileStepper();
+renderVStepper();
+buildV3();
+buildAnatomyStepper();
+</script>
+</body>
+</html>
