@@ -416,6 +416,83 @@
     .btn-secondary:hover { background: #f5f0eb; }
     .btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
+    /* Step form panel */
+    .step-form-panel {
+      margin-top: 20px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 20px 24px 24px;
+      background: white;
+    }
+    .step-form-panel h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .step-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 480px;
+    }
+    .step-form .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .step-form .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    .step-form .req-mark { color: #E53935; margin-left: 2px; }
+    .step-form input[type=text],
+    .step-form input[type=email],
+    .step-form input[type=tel],
+    .step-form select {
+      height: 40px;
+      padding: 0 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: white;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    .step-form input:focus, .step-form select:focus {
+      outline: none;
+      border-color: var(--blue-primary);
+      box-shadow: 0 0 0 3px rgba(0,87,255,.1);
+    }
+    .step-form .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--gray-900);
+    }
+    .step-form .check-row input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue-primary);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .step-form .field-hint {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+    .step-form-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 13px;
+      background: var(--gray-100);
+      border-radius: 8px;
+      border: 1.5px dashed var(--gray-200);
+    }
+
     /* Step count control */
     .controls-row {
       display: flex;
@@ -763,15 +840,17 @@
             <span style="margin-left:8px">|</span>
             <span class="progress-chip" id="h-progress-chip">Step 1 of 5</span>
             <span id="h-saving-chip" style="opacity:0;transition:opacity .3s;font-size:12px;color:var(--gray-600);margin-left:4px">Saving…</span>
-            <span style="margin-left:8px">|</span>
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--gray-600)">
-              <input type="checkbox" id="sim-partial-data" checked style="accent-color:#0057FF"> Simulate partial data
-            </label>
           </div>
 
           <!-- Stepper track -->
           <div style="width:100%">
             <div class="h-stepper" id="h-stepper-track"></div>
+          </div>
+
+          <!-- Step form content -->
+          <div class="step-form-panel">
+            <h4 id="h-step-form-title">Step</h4>
+            <div id="h-step-form-body"></div>
           </div>
 
           <!-- Nav buttons -->
@@ -1035,6 +1114,101 @@ const V_3_STEPS = [
   { label:'Confirm',  desc:'Review and confirm your details.', partly: false },
 ];
 
+/* ── Step Form Definitions ────────────────────────────────── */
+const STEP_FORMS = [
+  { title: 'Account Setup', fields: [
+    { id:'full-name',  label:'Full name',      required:true,  type:'text',  placeholder:'Jane Doe' },
+    { id:'email',      label:'Email address',  required:true,  type:'email', placeholder:'jane@example.com' },
+    { id:'phone',      label:'Phone number',   required:false, type:'tel',   placeholder:'555-0100', hint:'Optional' },
+  ]},
+  { title: 'Identity Verify', fields: [
+    { id:'policy-num', label:'Policy number',          required:true, type:'text', placeholder:'POL-000000' },
+    { id:'ssn-last4',  label:'Last 4 digits of SSN',   required:true, type:'text', placeholder:'0000', maxlength:'4' },
+  ]},
+  { title: 'Coverage Details', fields: [
+    { id:'plan',       label:'Coverage plan',     required:true,  type:'select', options:['Select a plan…','Basic — $150/mo','Standard — $250/mo','Premium — $400/mo'] },
+    { id:'deductible', label:'Deductible amount', required:false, type:'select', options:['No preference','$500','$1,000','$2,500'], hint:'Optional' },
+  ]},
+  { title: 'Payment Method', fields: [
+    { id:'pay-type',   label:'Payment method',        required:true,  type:'select', options:['Select…','Bank account (ACH)','Credit card','Debit card'] },
+    { id:'acct-name',  label:'Account holder name',   required:true,  type:'text',   placeholder:'Jane Doe' },
+    { id:'acct-num',   label:'Account / card number', required:false, type:'text',   placeholder:'•••• 0000', hint:'Optional — for demo only' },
+  ]},
+  { title: 'Review & Submit', fields: [
+    { id:'confirm-info',  label:'All information provided is accurate',  required:true, type:'checkbox' },
+    { id:'agree-terms',   label:'I agree to the terms and conditions',   required:true, type:'checkbox' },
+  ]},
+];
+
+/* ── Step field data store ───────────────────────────────── */
+let stepData = {}; // { [stepIndex]: { [fieldId]: value } }
+
+function getStepForm(stepIndex) {
+  return STEP_FORMS[stepIndex % STEP_FORMS.length];
+}
+
+function isStepComplete(stepIndex) {
+  const form = getStepForm(stepIndex);
+  if (!form) return true;
+  const data = stepData[stepIndex] || {};
+  return form.fields.filter(f => f.required).every(f => {
+    const v = data[f.id];
+    if (f.type === 'checkbox') return v === 'true' || v === true;
+    return v && String(v).trim() !== '';
+  });
+}
+
+function hasPartialData(stepIndex) {
+  const form = getStepForm(stepIndex);
+  if (!form) return false;
+  const data = stepData[stepIndex] || {};
+  const anyFilled = form.fields.some(f => {
+    const v = data[f.id];
+    if (f.type === 'checkbox') return v === 'true' || v === true;
+    return v && String(v).trim() !== '';
+  });
+  return anyFilled && !isStepComplete(stepIndex);
+}
+
+function renderStepForm(stepIndex, titleEl, bodyEl) {
+  const form = getStepForm(stepIndex);
+  if (!form) { bodyEl.innerHTML = '<div class="step-form-empty">No form for this step.</div>'; return; }
+  if (titleEl) titleEl.textContent = form.title;
+  const data = stepData[stepIndex] || {};
+  const wrap = document.createElement('div');
+  wrap.className = 'step-form';
+  form.fields.forEach(f => {
+    const group = document.createElement('div');
+    group.className = 'field-group';
+    const req = f.required ? '<span class="req-mark">*</span>' : '';
+    const stored = data[f.id] ?? '';
+    if (f.type === 'checkbox') {
+      const checked = stored === 'true' || stored === true;
+      group.innerHTML = `<label class="check-row"><input type="checkbox" data-field="${f.id}" data-step="${stepIndex}" ${checked ? 'checked' : ''}><span>${f.label}${req}</span></label>`;
+    } else if (f.type === 'select') {
+      const opts = f.options.map((o, i) => `<option value="${i === 0 ? '' : o}" ${stored === o ? 'selected' : ''}>${o}</option>`).join('');
+      group.innerHTML = `<span class="field-label">${f.label}${req}</span><select data-field="${f.id}" data-step="${stepIndex}">${opts}</select>${f.hint ? `<span class="field-hint">${f.hint}</span>` : ''}`;
+    } else {
+      group.innerHTML = `<span class="field-label">${f.label}${req}</span><input type="${f.type}" data-field="${f.id}" data-step="${stepIndex}" placeholder="${f.placeholder || ''}" value="${stored}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ''}>${f.hint ? `<span class="field-hint">${f.hint}</span>` : ''}`;
+    }
+    wrap.appendChild(group);
+  });
+  bodyEl.innerHTML = '';
+  bodyEl.appendChild(wrap);
+  // Wire change/input events
+  wrap.querySelectorAll('input, select').forEach(el => {
+    const save = (e) => {
+      const si = parseInt(e.target.dataset.step);
+      const fi = e.target.dataset.field;
+      if (!stepData[si]) stepData[si] = {};
+      stepData[si][fi] = e.target.type === 'checkbox' ? String(e.target.checked) : e.target.value;
+      saveState();
+    };
+    el.addEventListener('change', save);
+    if (el.type !== 'checkbox' && el.tagName !== 'SELECT') el.addEventListener('input', save);
+  });
+}
+
 /* ══════════════════════════════════════════════════════════════
    HORIZONTAL STEPPER ENGINE
 
@@ -1130,6 +1304,13 @@ function renderHStepper() {
   hNextBtn.disabled = false;
   hNextBtn.innerHTML = isLast ? `Submit ${SUBMIT_SVG}` : `Next ${NEXT_SVG}`;
   document.getElementById('h-count-display').textContent = hTotal;
+
+  // Render step form
+  const formIndex = hCurrent % STEP_FORMS.length;
+  renderStepForm(formIndex,
+    document.getElementById('h-step-form-title'),
+    document.getElementById('h-step-form-body')
+  );
   saveState();
 }
 
@@ -1292,14 +1473,17 @@ function renderVStepper() {
   buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
   const isPartly = vPartlyComplete.has(vCurrent);
   const isLast   = vCurrent === V_STEPS.length - 1;
-  document.getElementById('v-content-panel').innerHTML = `
+
+  // Content panel: step header + form
+  const panel = document.getElementById('v-content-panel');
+  panel.innerHTML = `
     <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
     ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
-    <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:20px;margin-top:8px">${V_STEPS[vCurrent].desc}</div>
-    <div style="background:var(--gray-100);border-radius:8px;border:1.5px dashed var(--gray-200);padding:32px;text-align:center;color:var(--gray-400);font-size:13px;">
-      Form content for step ${vCurrent + 1} goes here
-    </div>
+    <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:16px;margin-top:6px">${V_STEPS[vCurrent].desc}</div>
+    <div id="v-step-form-body"></div>
   `;
+  renderStepForm(vCurrent, null, document.getElementById('v-step-form-body'));
+
   document.getElementById('v-back').disabled = vCurrent === 0;
   const vNextBtn = document.getElementById('v-next');
   vNextBtn.disabled = false;
@@ -1381,6 +1565,7 @@ function saveState() {
       hPartlyComplete: [...hPartlyComplete],
       vCurrent,
       vPartlyComplete: [...vPartlyComplete],
+      stepData,
     }));
   } catch {}
 }
@@ -1393,16 +1578,12 @@ function restoreState() {
     hPartlyComplete = new Set(s.hPartlyComplete ?? []);
     vCurrent        = s.vCurrent        ?? vCurrent;
     vPartlyComplete = new Set(s.vPartlyComplete ?? []);
+    stepData        = s.stepData        ?? {};
   } catch {}
 }
 
-/* Simulate partial data: reads the toggle in the controls row.
-   When ON  → user has entered some data → shows modal on Next.
-   When OFF → no data entered            → shows inline validation. */
-function hasPartialData() {
-  const t = document.getElementById('sim-partial-data');
-  return t ? t.checked : true;
-}
+/* Simulate partial data: reads actual field state */
+// hasPartialData(stepIndex) is now defined above in STEP_FORMS section
 
 /* Saving indicator — shown when leaving a partly-complete step via backward nav */
 function showSavingIndicator(which, callback) {
