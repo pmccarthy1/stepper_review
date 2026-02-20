@@ -464,6 +464,15 @@
       border-color: var(--blue-primary);
       box-shadow: 0 0 0 3px rgba(0,87,255,.1);
     }
+    .step-form input.field-error, .step-form select.field-error {
+      border-color: #E53935;
+      box-shadow: 0 0 0 3px rgba(229,57,53,.1);
+    }
+    .step-form .field-error-msg {
+      font-size: 11px;
+      color: #E53935;
+      margin-top: 2px;
+    }
     .step-form .check-row {
       display: flex;
       align-items: center;
@@ -1202,10 +1211,41 @@ function renderStepForm(stepIndex, titleEl, bodyEl) {
       const fi = e.target.dataset.field;
       if (!stepData[si]) stepData[si] = {};
       stepData[si][fi] = e.target.type === 'checkbox' ? String(e.target.checked) : e.target.value;
+      // Clear error highlight once user fills it
+      e.target.classList.remove('field-error');
+      const errMsg = e.target.parentElement.querySelector('.field-error-msg');
+      if (errMsg) errMsg.remove();
       saveState();
     };
     el.addEventListener('change', save);
     if (el.type !== 'checkbox' && el.tagName !== 'SELECT') el.addEventListener('input', save);
+  });
+}
+
+function highlightMissingFields(stepIndex) {
+  const form = getStepForm(stepIndex);
+  if (!form) return;
+  const data = stepData[stepIndex] || {};
+  form.fields.filter(f => f.required).forEach(f => {
+    const v = data[f.id];
+    const isEmpty = f.type === 'checkbox'
+      ? !(v === 'true' || v === true)
+      : !v || String(v).trim() === '';
+    if (!isEmpty) return;
+    // Find the input/select with matching data-field
+    ['h-step-form-body','v-step-form-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      const el = body.querySelector(`[data-field="${f.id}"]`);
+      if (!el) return;
+      el.classList.add('field-error');
+      if (!el.parentElement.querySelector('.field-error-msg')) {
+        const msg = document.createElement('span');
+        msg.className = 'field-error-msg';
+        msg.textContent = 'This field is required';
+        el.parentElement.appendChild(msg);
+      }
+    });
   });
 }
 
@@ -1322,15 +1362,31 @@ function renderHStepper() {
 ──────────────────────────────────────────────────────────── */
 document.getElementById('h-next').addEventListener('click', () => {
   hideInlineError('h');
+  const formIdx = hCurrent % STEP_FORMS.length;
   if (hCurrent === hTotal - 1) { handleSubmit('h'); return; }
-  if (hasPartialData()) showModal('h');
-  else showInlineError('h', 'Please complete the required fields on this step before continuing.');
+  if (isStepComplete(formIdx)) {
+    hPartlyComplete.delete(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (hasPartialData(formIdx)) {
+    showModal('h');
+  } else {
+    showInlineError('h', 'Please complete the required fields (*) on this step before continuing.');
+  }
 });
 document.getElementById('v-next').addEventListener('click', () => {
   hideInlineError('v');
+  const formIdx = vCurrent % STEP_FORMS.length;
   if (vCurrent === V_STEPS.length - 1) { handleSubmit('v'); return; }
-  if (hasPartialData()) showModal('v');
-  else showInlineError('v', 'Please complete the required fields on this step before continuing.');
+  if (isStepComplete(formIdx)) {
+    vPartlyComplete.delete(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  } else if (hasPartialData(formIdx)) {
+    showModal('v');
+  } else {
+    showInlineError('v', 'Please complete the required fields (*) on this step before continuing.');
+  }
 });
 
 /* ── Back (Backward Navigation) ────────────────────────────
