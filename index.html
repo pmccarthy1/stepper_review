@@ -762,6 +762,11 @@
             <button class="step-count-btn" id="h-inc">+</button>
             <span style="margin-left:8px">|</span>
             <span class="progress-chip" id="h-progress-chip">Step 1 of 5</span>
+            <span id="h-saving-chip" style="opacity:0;transition:opacity .3s;font-size:12px;color:var(--gray-600);margin-left:4px">Saving…</span>
+            <span style="margin-left:8px">|</span>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--gray-600)">
+              <input type="checkbox" id="sim-partial-data" checked style="accent-color:#0057FF"> Simulate partial data
+            </label>
           </div>
 
           <!-- Stepper track -->
@@ -780,6 +785,8 @@
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
+          <!-- Inline validation / submission message -->
+          <div id="h-inline-error" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF3F3;border:1.5px solid #F44336;border-radius:8px;font-size:13px;color:#B71C1C"></div>
 
         </div>
       </div>
@@ -843,7 +850,10 @@
 
         </div>
 
-        <div class="nav-row" style="margin-top:40px">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;min-height:20px">
+          <span id="v-saving-chip" style="opacity:0;transition:opacity .3s;font-size:12px;color:var(--gray-600)">Saving…</span>
+        </div>
+        <div class="nav-row" style="margin-top:12px">
           <button class="btn btn-secondary" id="v-back">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Back
@@ -853,6 +863,8 @@
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
+        <!-- Inline validation / submission message -->
+        <div id="v-inline-error" style="display:none;margin-top:12px;padding:10px 14px;background:#FFF3F3;border:1.5px solid #F44336;border-radius:8px;font-size:13px;color:#B71C1C"></div>
 
       </div>
     </div>
@@ -993,9 +1005,9 @@
   <div class="modal">
     <div class="modal-icon">⚠️</div>
     <h3>Save and continue?</h3>
-    <p>Some information on this step is incomplete. Your progress will be saved and this step will be marked as <strong>partly complete</strong>. You can return to finish it later.</p>
+    <p>Some required information on this step is missing. You can save your partial progress and return to complete it later, or stay and finish it now.</p>
     <div class="modal-actions">
-      <button class="btn btn-secondary" id="modal-cancel">Go back &amp; finish</button>
+      <button class="btn btn-secondary" id="modal-cancel">Stay &amp; complete</button>
       <button class="btn btn-primary" id="modal-confirm">Save &amp; continue</button>
     </div>
   </div>
@@ -1072,6 +1084,10 @@ function buildHStepper(container, total, current, smallDot = false, partlySet = 
     if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
     if (isFuture)         cls += ' is-future';
     step.className = cls;
+    if (isFuture) {
+      step.setAttribute('aria-disabled', 'true');
+      step.setAttribute('tabindex', '-1');
+    }
 
     const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
     const name     = STEP_NAMES[i] || `Step ${i + 1}`;
@@ -1098,28 +1114,66 @@ function buildHStepper(container, total, current, smallDot = false, partlySet = 
   }
 }
 
+const NEXT_SVG   = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SUBMIT_SVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polyline points="4,10 8.5,14.5 16,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function renderHStepper() {
   const container = document.getElementById('h-stepper-track');
   buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true);
 
   const isPartly = hPartlyComplete.has(hCurrent);
+  const isLast   = hCurrent === hTotal - 1;
   document.getElementById('h-progress-chip').textContent =
     `Step ${hCurrent + 1} of ${hTotal}${isPartly ? ' · partly complete' : ''}`;
-  document.getElementById('h-back').disabled    = hCurrent === 0;
-  document.getElementById('h-next').disabled    = hCurrent === hTotal - 1;
+  document.getElementById('h-back').disabled = hCurrent === 0;
+  const hNextBtn = document.getElementById('h-next');
+  hNextBtn.disabled = false;
+  hNextBtn.innerHTML = isLast ? `Submit ${SUBMIT_SVG}` : `Next ${NEXT_SVG}`;
   document.getElementById('h-count-display').textContent = hTotal;
+  saveState();
 }
 
-/* Continue — show modal so user decides: fully complete or partly complete */
+/* ── Next (Forward Navigation) ─────────────────────────────
+   Linear only. Validate on click:
+   - Last step → handleSubmit()
+   - Has partial data → show modal
+   - No data entered  → show inline validation error
+──────────────────────────────────────────────────────────── */
 document.getElementById('h-next').addEventListener('click', () => {
-  if (hCurrent < hTotal - 1) showModal('h');
+  hideInlineError('h');
+  if (hCurrent === hTotal - 1) { handleSubmit('h'); return; }
+  if (hasPartialData()) showModal('h');
+  else showInlineError('h', 'Please complete the required fields on this step before continuing.');
 });
 document.getElementById('v-next').addEventListener('click', () => {
-  if (vCurrent < V_STEPS.length - 1) showModal('v');
+  hideInlineError('v');
+  if (vCurrent === V_STEPS.length - 1) { handleSubmit('v'); return; }
+  if (hasPartialData()) showModal('v');
+  else showInlineError('v', 'Please complete the required fields on this step before continuing.');
 });
-/* Back */
+
+/* ── Back (Backward Navigation) ────────────────────────────
+   Always allowed, never blocked.
+   Auto-saves current step if partly complete.
+   No modal shown.
+──────────────────────────────────────────────────────────── */
 document.getElementById('h-back').addEventListener('click', () => {
-  if (hCurrent > 0) { hCurrent--; renderHStepper(); }
+  if (hCurrent === 0) return;
+  hideInlineError('h');
+  const leavingPartly = hPartlyComplete.has(hCurrent);
+  hCurrent--;
+  if (leavingPartly) showSavingIndicator('h', () => renderHStepper());
+  else renderHStepper();
+});
+
+/* v-next was wired through modal above; v-back here */
+document.getElementById('v-back').addEventListener('click', () => {
+  if (vCurrent === 0) return;
+  hideInlineError('v');
+  const leavingPartly = vPartlyComplete.has(vCurrent);
+  vCurrent--;
+  if (leavingPartly) showSavingIndicator('v', () => renderVStepper());
+  else renderVStepper();
 });
 
 /* Step count +/- */
@@ -1222,7 +1276,13 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
     `;
 
     if (interactive && (isComplete || isPartlyComplete)) {
-      stepEl.addEventListener('click', () => { vCurrent = i; renderVStepper(); });
+      stepEl.addEventListener('click', () => {
+        if (i >= vCurrent) return; // backward only
+        const leavingPartly = vPartlyComplete.has(vCurrent);
+        vCurrent = i;
+        if (leavingPartly) showSavingIndicator('v', () => renderVStepper());
+        else renderVStepper();
+      });
     }
     container.appendChild(stepEl);
   });
@@ -1231,6 +1291,7 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
 function renderVStepper() {
   buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
   const isPartly = vPartlyComplete.has(vCurrent);
+  const isLast   = vCurrent === V_STEPS.length - 1;
   document.getElementById('v-content-panel').innerHTML = `
     <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
     ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
@@ -1240,13 +1301,13 @@ function renderVStepper() {
     </div>
   `;
   document.getElementById('v-back').disabled = vCurrent === 0;
-  document.getElementById('v-next').disabled = vCurrent === V_STEPS.length - 1;
+  const vNextBtn = document.getElementById('v-next');
+  vNextBtn.disabled = false;
+  vNextBtn.innerHTML = isLast ? `Submit ${SUBMIT_SVG}` : `Next ${NEXT_SVG}`;
+  saveState();
 }
 
 // v-next wired through modal above
-document.getElementById('v-back').addEventListener('click', () => {
-  if (vCurrent > 0) { vCurrent--; renderVStepper(); }
-});
 
 /* 3-step static — step 2 is partly complete */
 function buildV3() {
@@ -1254,10 +1315,9 @@ function buildV3() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   MODAL LOGIC
-   Continue button shows modal. User chooses:
-   - "Save & continue" → current step becomes partly-complete
-   - "Go back & finish" → stays on current step (fully complete on next Continue)
+   MODAL LOGIC: comment update
+   - "Save & continue" → step becomes Partly completed, advance
+   - "Stay & complete" → close modal, show inline errors, stay
 ══════════════════════════════════════════════════════════════ */
 let pendingModalStepper = null; // 'h' or 'v'
 
@@ -1284,18 +1344,11 @@ document.getElementById('modal-confirm').addEventListener('click', () => {
   hideModal();
 });
 
-// "Go back & finish" — advance without partly-complete (fully complete)
+// "Stay & complete" — close modal, show inline errors, user stays on current step
 document.getElementById('modal-cancel').addEventListener('click', () => {
-  if (pendingModalStepper === 'h') {
-    hPartlyComplete.delete(hCurrent);
-    hCurrent++;
-    renderHStepper();
-  } else if (pendingModalStepper === 'v') {
-    vPartlyComplete.delete(vCurrent);
-    vCurrent++;
-    renderVStepper();
-  }
+  const which = pendingModalStepper;
   hideModal();
+  showInlineError(which, 'Please complete all required fields before moving on.');
 });
 
 // Close on overlay click
@@ -1316,8 +1369,120 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 /* ══════════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════════ */
+
+/* localStorage persistence */
+const STORE_KEY = 'sequoia-stepper-state';
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      hCurrent, hTotal,
+      hPartlyComplete: [...hPartlyComplete],
+      vCurrent,
+      vPartlyComplete: [...vPartlyComplete],
+    }));
+  } catch {}
+}
+function restoreState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (!s) return;
+    hTotal          = s.hTotal          ?? hTotal;
+    hCurrent        = s.hCurrent        ?? hCurrent;
+    hPartlyComplete = new Set(s.hPartlyComplete ?? []);
+    vCurrent        = s.vCurrent        ?? vCurrent;
+    vPartlyComplete = new Set(s.vPartlyComplete ?? []);
+  } catch {}
+}
+
+/* Simulate partial data: reads the toggle in the controls row.
+   When ON  → user has entered some data → shows modal on Next.
+   When OFF → no data entered            → shows inline validation. */
+function hasPartialData() {
+  const t = document.getElementById('sim-partial-data');
+  return t ? t.checked : true;
+}
+
+/* Saving indicator — shown when leaving a partly-complete step via backward nav */
+function showSavingIndicator(which, callback) {
+  const el = document.getElementById(which === 'h' ? 'h-saving-chip' : 'v-saving-chip');
+  if (el) {
+    el.style.opacity = '1';
+    setTimeout(() => {
+      el.style.opacity = '0';
+      if (callback) callback();
+    }, 900);
+  } else {
+    if (callback) callback();
+  }
+}
+
+/* Inline error / validation messages (in-page only, not on stepper) */
+function showInlineError(which, msg) {
+  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  if (!el) return;
+  el.style.background = '#FFF3F3';
+  el.style.border = '1.5px solid #F44336';
+  el.style.color = '#B71C1C';
+  el.innerHTML = msg;
+  el.style.display = 'block';
+}
+function hideInlineError(which) {
+  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  if (el) el.style.display = 'none';
+}
+
+/* Final submission eligibility check */
+function handleSubmit(which) {
+  const partlySet = which === 'h' ? hPartlyComplete : vPartlyComplete;
+  const total     = which === 'h' ? hTotal : V_STEPS.length;
+  if (partlySet.size > 0) {
+    // Find earliest partly-complete step
+    let firstPartly = -1;
+    for (let i = 0; i < total; i++) {
+      if (partlySet.has(i)) { firstPartly = i; break; }
+    }
+    const count = partlySet.size;
+    const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+    if (el) {
+      el.style.background = '#FFF3F3';
+      el.style.border = '1.5px solid #F44336';
+      el.style.color = '#B71C1C';
+      el.innerHTML = `<strong>Submission blocked.</strong> You have ${count} incomplete step${count > 1 ? 's' : ''}. ` +
+        `<a href="#" class="go-to-incomplete" data-which="${which}" data-step="${firstPartly}" ` +
+        `style="color:#0057FF;text-decoration:underline;cursor:pointer">Go to first incomplete step →</a>`;
+      el.style.display = 'block';
+    }
+    return;
+  }
+  // All complete — success
+  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  if (el) {
+    el.style.background = '#E8F5E9';
+    el.style.border = '1.5px solid #4CAF50';
+    el.style.color = '#1B5E20';
+    el.innerHTML = '✅ <strong>Submitted successfully!</strong> All steps are complete.';
+    el.style.display = 'block';
+  }
+}
+
+/* CTA: Go to first incomplete step */
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('.go-to-incomplete');
+  if (!a) return;
+  e.preventDefault();
+  const which = a.dataset.which;
+  const step  = parseInt(a.dataset.step);
+  hideInlineError(which);
+  if (which === 'h') { hCurrent = step; renderHStepper(); }
+  else               { vCurrent = step; renderVStepper(); }
+});
+
+/* ══════════════════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════════════════ */
+restoreState();
 renderHStepper();
 buildVariants();
 buildMobileStepper();
