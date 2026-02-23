@@ -9,7 +9,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --blue-primary:    #0057FF;
+      --blue-primary:    #0061F4;
       --blue-hover:      #0041CC;
       --blue-light:      #E8F0FF;
       --gray-100:        #F5F5F5;
@@ -17,7 +17,7 @@
       --gray-400:        #9E9E9E;
       --gray-600:        #616161;
       --gray-900:        #212121;
-      --green-complete:  #0057FF;
+      --green-complete:  #0061F4;
       --white:           #FFFFFF;
       --font:            'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --dot-size:        32px;
@@ -229,11 +229,11 @@
       font-weight: 600;
     }
 
-    /* Incomplete - grey filled circle, white number */
+    /* Incomplete - light grey fill, dark number */
     .h-dot.incomplete {
-      background: #9E9E9E;
-      border: 4px solid #9E9E9E;
-      color: white;
+      background: #E0E0E0;
+      border: 4px solid #E0E0E0;
+      color: #281805;
     }
 
     /* Current - solid blue fill, white step number */
@@ -254,16 +254,16 @@
     .h-label {
       font-size: 12px;
       font-weight: 400;
-      color: var(--gray-400);
+      color: #281805;
       white-space: nowrap;
       text-align: center;
       transition: color .2s, font-weight .2s;
     }
     .h-step.is-current .h-label {
-      color: var(--gray-900);
+      color: #281805;
       font-weight: 700;
     }
-    .h-step.is-complete .h-label { color: var(--gray-600); }
+    .h-step.is-complete .h-label { color: #281805; }
 
     /* Checkmark SVG */
     .check-icon {
@@ -276,13 +276,13 @@
       fill: none;
     }
 
-    /* Partly complete - amber filled circle, white number */
+    /* Partly complete - blue fill with white dash */
     .h-dot.partly-complete {
-      background: #F59E0B;
-      border: 4px solid #F59E0B;
+      background: var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: white;
     }
-    .h-step.is-partly-complete .h-label { color: var(--gray-600); }
+    .h-step.is-partly-complete .h-label { color: #281805; }
 
     /* ── Icon swap: normal icon vs pencil on hover ──────────── */
     .dot-normal { display: flex; align-items: center; justify-content: center; }
@@ -579,9 +579,9 @@
       transition: all .2s;
     }
     .v-dot.incomplete {
-      background: #9E9E9E;
-      border: 4px solid #9E9E9E;
-      color: white;
+      background: #E0E0E0;
+      border: 4px solid #E0E0E0;
+      color: #281805;
     }
     .v-dot.current {
       background: var(--blue-primary);
@@ -594,8 +594,8 @@
       color: var(--white);
     }
     .v-dot.partly-complete {
-      background: #F59E0B;
-      border: 4px solid #F59E0B;
+      background: var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: white;
       font-weight: 700;
     }
@@ -633,12 +633,13 @@
 
     .v-step-title {
       font-size: 14px;
-      font-weight: 500;
-      color: var(--gray-400);
+      font-weight: 400;
+      color: #281805;
       transition: color .2s;
     }
-    .v-step.is-current .v-step-title { color: var(--gray-900); font-weight: 700; }
-    .v-step.is-complete .v-step-title { color: var(--gray-600); }
+    .v-step.is-current .v-step-title { color: #281805; font-weight: 700; }
+    .v-step.is-complete .v-step-title { color: #281805; }
+    .v-step.is-partly-complete .v-step-title { color: #281805; }
 
     .v-step-desc {
       margin-top: 6px;
@@ -1245,10 +1246,11 @@ let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly comp
 
 function dotHtml(state, num, smallDot) {
   const sz  = smallDot ? 11 : 14;
-  const pen = svgPencil('white'); // always white over solid fill
+  const pen = svgPencil('white');
   let normal;
-  if (state === 'complete') normal = svgCheck();
-  else                      normal = `<span style="font-size:${sz}px">${num}</span>`;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'partly-complete') normal = svgDash('white');
+  else                                  normal = `<span style="font-size:${sz}px">${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
@@ -1447,8 +1449,9 @@ let vPartlyComplete = new Set([1]);
 function dotHtmlV(state, num) {
   const pen = svgPencil('white');
   let normal;
-  if (state === 'complete') normal = svgCheck();
-  else                      normal = `<span>${num}</span>`;
+  if (state === 'complete')             normal = svgCheck();
+  else if (state === 'partly-complete') normal = svgDash('white');
+  else                                  normal = `<span>${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
