@@ -229,37 +229,24 @@
       font-weight: 600;
     }
 
-    /* Incomplete */
+    /* Incomplete - grey filled circle, white number */
     .h-dot.incomplete {
-      background: var(--white);
-      border: 2px solid var(--gray-200);
-      color: var(--gray-400);
+      background: #9E9E9E;
+      border: 4px solid #9E9E9E;
+      color: white;
     }
 
-    /* Active / current: white bg, blue ring, blue center dot via ::after */
+    /* Current - solid blue fill, white step number */
     .h-dot.current {
-      background: white;
-      border: 2px solid var(--blue-primary);
-      box-shadow: none;
-      color: var(--blue-primary);
-    }
-    .h-dot.current::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
       background: var(--blue-primary);
-      pointer-events: none;
+      border: 4px solid var(--blue-primary);
+      color: white;
     }
 
-    /* Complete */
+    /* Complete - blue fill, white checkmark */
     .h-dot.complete {
       background: var(--blue-primary);
-      border: 2px solid var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: var(--white);
     }
 
@@ -289,11 +276,11 @@
       fill: none;
     }
 
-    /* ── Partly complete: white bg, blue border, dash icon ──── */
+    /* Partly complete - amber filled circle, white number */
     .h-dot.partly-complete {
-      background: var(--white);
-      border: 2px solid var(--blue-primary);
-      color: var(--blue-primary);
+      background: #F59E0B;
+      border: 4px solid #F59E0B;
+      color: white;
     }
     .h-step.is-partly-complete .h-label { color: var(--gray-600); }
 
@@ -303,20 +290,35 @@
 
     /* ── Hoverable steps: complete + partly-complete ONLY ────── */
     .h-step.is-hoverable { cursor: pointer; }
-    .h-step.is-hoverable:hover .h-dot.complete {
-      background: var(--blue-hover);
-      border-color: var(--blue-hover);
-    }
-    .h-step.is-hoverable:hover .h-dot.partly-complete {
-      background: var(--blue-light);
-      border-color: var(--blue-hover);
-    }
+    /* Fill colour does not change on hover — only pencil icon swaps in */
     .h-step.is-hoverable:hover .dot-normal { display: none; }
     .h-step.is-hoverable:hover .dot-pencil { display: flex; }
     .h-step.is-hoverable:hover .h-label {
       text-decoration: underline;
       color: var(--gray-900);
     }
+
+    /* ── Tooltip on step dots via data-tip attribute ─────────── */
+    .h-dot[data-tip], .v-dot[data-tip] { position: relative; }
+    .h-dot[data-tip]::before, .v-dot[data-tip]::before {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #212121;
+      color: #fff;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s;
+      z-index: 200;
+    }
+    .h-dot[data-tip]:hover::before, .v-dot[data-tip]:hover::before { opacity: 1; }
 
     /* ── Future / incomplete steps — no pointer, no hover ────── */
     .h-step.is-future {
@@ -577,50 +579,30 @@
       transition: all .2s;
     }
     .v-dot.incomplete {
-      background: var(--white);
-      border: 2px solid var(--gray-200);
-      color: var(--gray-400);
+      background: #9E9E9E;
+      border: 4px solid #9E9E9E;
+      color: white;
     }
     .v-dot.current {
-      background: white;
-      border: 2px solid var(--blue-primary);
-      box-shadow: none;
-      color: var(--blue-primary);
-    }
-    .v-dot.current::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
       background: var(--blue-primary);
-      pointer-events: none;
+      border: 4px solid var(--blue-primary);
+      color: white;
     }
     .v-dot.complete {
       background: var(--blue-primary);
-      border: 2px solid var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: var(--white);
     }
     .v-dot.partly-complete {
-      background: var(--blue-light);
-      border: 2px solid var(--blue-primary);
-      color: var(--blue-primary);
+      background: #F59E0B;
+      border: 4px solid #F59E0B;
+      color: white;
       font-weight: 700;
     }
 
     /* ── Vertical hoverable steps ───────────────────────────── */
     .v-step.is-hoverable { cursor: pointer; }
-    .v-step.is-hoverable:hover .v-dot.complete {
-      background: var(--blue-hover);
-      border-color: var(--blue-hover);
-    }
-    .v-step.is-hoverable:hover .v-dot.partly-complete {
-      background: #C7D9FF;
-      border-color: var(--blue-hover);
-    }
+    /* Fill colour does not change on hover — only pencil icon swaps in */
     .v-step.is-hoverable:hover .dot-normal { display: none; }
     .v-step.is-hoverable:hover .dot-pencil { display: flex; }
     .v-step.is-hoverable:hover .v-step-title {
@@ -636,7 +618,6 @@
       flex: 1;
       min-height: 40px;
       background: var(--gray-200);
-      margin: 4px 0;
       border-radius: 2px;
       transition: background .3s;
     }
@@ -1264,12 +1245,10 @@ let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly comp
 
 function dotHtml(state, num, smallDot) {
   const sz  = smallDot ? 11 : 14;
-  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  const pen = svgPencil('white'); // always white over solid fill
   let normal;
-  if (state === 'complete')             normal = svgCheck();
-  else if (state === 'current')         normal = svgDot();
-  else if (state === 'partly-complete') normal = svgDash('#0057FF');
-  else                                  normal = `<span style="font-size:${sz}px">${num}</span>`;
+  if (state === 'complete') normal = svgCheck();
+  else                      normal = `<span style="font-size:${sz}px">${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
@@ -1309,10 +1288,11 @@ function buildHStepper(container, total, current, smallDot = false, partlySet = 
     const lColor   = isCurrent ? 'var(--gray-900)'
                    : isComplete || isPartlyComplete ? 'var(--gray-600)'
                    : 'var(--gray-400)';
+    const tip      = isComplete ? 'Completed step' : isPartlyComplete ? 'Partly completed step' : isCurrent ? 'Current step' : '';
 
     step.innerHTML = `
       <div class="h-step-inner">
-        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px">
+        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px"${tip ? ` data-tip="${tip}"` : ''}>
           ${dotHtml(dotState, i + 1, smallDot)}
         </div>
         <span class="h-label" style="font-weight:${lWeight};color:${lColor}">${name}</span>
@@ -1337,8 +1317,7 @@ function renderHStepper() {
 
   const isPartly = hPartlyComplete.has(hCurrent);
   const isLast   = hCurrent === hTotal - 1;
-  document.getElementById('h-progress-chip').textContent =
-    `Step ${hCurrent + 1} of ${hTotal}${isPartly ? ' · partly complete' : ''}`;
+  document.getElementById('h-progress-chip').textContent = `Step ${hCurrent + 1} of ${hTotal}`;
   document.getElementById('h-back').disabled = hCurrent === 0;
   const hNextBtn = document.getElementById('h-next');
   hNextBtn.disabled = false;
@@ -1466,12 +1445,10 @@ let vCurrent        = 2;
 let vPartlyComplete = new Set([1]);
 
 function dotHtmlV(state, num) {
-  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  const pen = svgPencil('white');
   let normal;
-  if (state === 'complete')             normal = svgCheck();
-  else if (state === 'current')         normal = svgDot();
-  else if (state === 'partly-complete') normal = svgDash('#0057FF');
-  else                                  normal = `<span>${num}</span>`;
+  if (state === 'complete') normal = svgCheck();
+  else                      normal = `<span>${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
@@ -1484,6 +1461,7 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
     const isFuture         = i > current;
 
     const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
+    const tip      = isComplete ? 'Completed step' : isPartlyComplete ? 'Partly completed step' : isCurrent ? 'Current step' : '';
 
     const stepEl = document.createElement('div');
     let cls = 'v-step';
@@ -1499,11 +1477,11 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
 
     stepEl.innerHTML = `
       <div class="v-step-aside">
-        <div class="v-dot ${dotState}">${dotHtmlV(dotState, i + 1)}</div>
+        <div class="v-dot ${dotState}"${tip ? ` data-tip="${tip}"` : ''}>${dotHtmlV(dotState, i + 1)}</div>
         ${lineHtml}
       </div>
       <div class="v-step-body">
-        <div class="v-step-title">${s.label}${isPartlyComplete ? ' <span style="font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:1px 6px;border-radius:4px">Partly complete</span>' : ''}</div>
+        <div class="v-step-title">${s.label}</div>
         <div class="v-step-desc">${s.desc}</div>
       </div>
     `;
@@ -1530,7 +1508,6 @@ function renderVStepper() {
   const panel = document.getElementById('v-content-panel');
   panel.innerHTML = `
     <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
-    ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
     <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:16px;margin-top:6px">${V_STEPS[vCurrent].desc}</div>
     <div id="v-step-form-body"></div>
   `;
