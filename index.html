@@ -9,22 +9,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --blue-primary:    #0057FF;
-      --blue-hover:      #0041CC;
-      --blue-light:      #E8F0FF;
-      --gray-100:        #F5F5F5;
-      --gray-200:        #E0E0E0;
-      --gray-400:        #9E9E9E;
-      --gray-600:        #616161;
-      --gray-900:        #212121;
-      --green-complete:  #0057FF;
-      --white:           #FFFFFF;
-      --font:            'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --dot-size:        32px;
-      --dot-size-sm:     24px;
-      --line-thickness:  4px;
-      --radius:          50%;
-      --step-gap:        0px;
+      --blue-primary: #0061f4;
+      --white: #ffffff;
+      --gray-100: #f2f2f2;
+      --gray-200: #e0e0e0;
+      --gray-400: #ababab;
+      --gray-600: #6b6b6b;
+      --gray-900: #281805;
+      --dot-size: 32px;
+      --dot-size-sm: 24px;
+      --line-thickness: 4px;
+      --radius: 50%;
+      --step-gap: 0px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     body {
@@ -229,37 +226,24 @@
       font-weight: 600;
     }
 
-    /* Incomplete */
+    /* Incomplete - light grey fill, dark number */
     .h-dot.incomplete {
-      background: var(--white);
-      border: 2px solid var(--gray-200);
-      color: var(--gray-400);
+      background: #E0E0E0;
+      border: 4px solid #E0E0E0;
+      color: #281805;
     }
 
-    /* Active / current: white bg, blue ring, blue center dot via ::after */
+    /* Current - solid blue fill, white step number */
     .h-dot.current {
-      background: white;
-      border: 2px solid var(--blue-primary);
-      box-shadow: none;
-      color: var(--blue-primary);
-    }
-    .h-dot.current::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
       background: var(--blue-primary);
-      pointer-events: none;
+      border: 4px solid var(--blue-primary);
+      color: white;
     }
 
-    /* Complete */
+    /* Complete - blue fill, white checkmark */
     .h-dot.complete {
       background: var(--blue-primary);
-      border: 2px solid var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: var(--white);
     }
 
@@ -267,16 +251,16 @@
     .h-label {
       font-size: 12px;
       font-weight: 400;
-      color: var(--gray-400);
+      color: #281805;
       white-space: nowrap;
       text-align: center;
       transition: color .2s, font-weight .2s;
     }
     .h-step.is-current .h-label {
-      color: var(--gray-900);
+      color: #281805;
       font-weight: 700;
     }
-    .h-step.is-complete .h-label { color: var(--gray-600); }
+    .h-step.is-complete .h-label { color: #281805; }
 
     /* Checkmark SVG */
     .check-icon {
@@ -289,13 +273,13 @@
       fill: none;
     }
 
-    /* ── Partly complete: white bg, blue border, dash icon ──── */
+    /* Partly complete - blue fill with white dash */
     .h-dot.partly-complete {
-      background: var(--white);
-      border: 2px solid var(--blue-primary);
-      color: var(--blue-primary);
+      background: var(--blue-primary);
+      border: 4px solid var(--blue-primary);
+      color: white;
     }
-    .h-step.is-partly-complete .h-label { color: var(--gray-600); }
+    .h-step.is-partly-complete .h-label { color: #281805; }
 
     /* ── Icon swap: normal icon vs pencil on hover ──────────── */
     .dot-normal { display: flex; align-items: center; justify-content: center; }
@@ -303,20 +287,35 @@
 
     /* ── Hoverable steps: complete + partly-complete ONLY ────── */
     .h-step.is-hoverable { cursor: pointer; }
-    .h-step.is-hoverable:hover .h-dot.complete {
-      background: var(--blue-hover);
-      border-color: var(--blue-hover);
-    }
-    .h-step.is-hoverable:hover .h-dot.partly-complete {
-      background: var(--blue-light);
-      border-color: var(--blue-hover);
-    }
+    /* Fill colour does not change on hover — only pencil icon swaps in */
     .h-step.is-hoverable:hover .dot-normal { display: none; }
     .h-step.is-hoverable:hover .dot-pencil { display: flex; }
     .h-step.is-hoverable:hover .h-label {
       text-decoration: underline;
       color: var(--gray-900);
     }
+
+    /* ── Tooltip on step dots via data-tip attribute ─────────── */
+    .h-dot[data-tip], .v-dot[data-tip] { position: relative; }
+    .h-dot[data-tip]::before, .v-dot[data-tip]::before {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #212121;
+      color: #fff;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s;
+      z-index: 200;
+    }
+    .h-dot[data-tip]:hover::before, .v-dot[data-tip]:hover::before { opacity: 1; }
 
     /* ── Future / incomplete steps — no pointer, no hover ────── */
     .h-step.is-future {
@@ -464,6 +463,15 @@
       border-color: var(--blue-primary);
       box-shadow: 0 0 0 3px rgba(0,87,255,.1);
     }
+    .step-form input.field-error, .step-form select.field-error {
+      border-color: #E53935;
+      box-shadow: 0 0 0 3px rgba(229,57,53,.1);
+    }
+    .step-form .field-error-msg {
+      font-size: 11px;
+      color: #E53935;
+      margin-top: 2px;
+    }
     .step-form .check-row {
       display: flex;
       align-items: center;
@@ -568,50 +576,30 @@
       transition: all .2s;
     }
     .v-dot.incomplete {
-      background: var(--white);
-      border: 2px solid var(--gray-200);
-      color: var(--gray-400);
+      background: #E0E0E0;
+      border: 4px solid #E0E0E0;
+      color: #281805;
     }
     .v-dot.current {
-      background: white;
-      border: 2px solid var(--blue-primary);
-      box-shadow: none;
-      color: var(--blue-primary);
-    }
-    .v-dot.current::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
       background: var(--blue-primary);
-      pointer-events: none;
+      border: 4px solid var(--blue-primary);
+      color: white;
     }
     .v-dot.complete {
       background: var(--blue-primary);
-      border: 2px solid var(--blue-primary);
+      border: 4px solid var(--blue-primary);
       color: var(--white);
     }
     .v-dot.partly-complete {
-      background: var(--blue-light);
-      border: 2px solid var(--blue-primary);
-      color: var(--blue-primary);
+      background: var(--blue-primary);
+      border: 4px solid var(--blue-primary);
+      color: white;
       font-weight: 700;
     }
 
     /* ── Vertical hoverable steps ───────────────────────────── */
     .v-step.is-hoverable { cursor: pointer; }
-    .v-step.is-hoverable:hover .v-dot.complete {
-      background: var(--blue-hover);
-      border-color: var(--blue-hover);
-    }
-    .v-step.is-hoverable:hover .v-dot.partly-complete {
-      background: #C7D9FF;
-      border-color: var(--blue-hover);
-    }
+    /* Fill colour does not change on hover — only pencil icon swaps in */
     .v-step.is-hoverable:hover .dot-normal { display: none; }
     .v-step.is-hoverable:hover .dot-pencil { display: flex; }
     .v-step.is-hoverable:hover .v-step-title {
@@ -627,7 +615,6 @@
       flex: 1;
       min-height: 40px;
       background: var(--gray-200);
-      margin: 4px 0;
       border-radius: 2px;
       transition: background .3s;
     }
@@ -643,12 +630,13 @@
 
     .v-step-title {
       font-size: 14px;
-      font-weight: 500;
-      color: var(--gray-400);
+      font-weight: 400;
+      color: #281805;
       transition: color .2s;
     }
-    .v-step.is-current .v-step-title { color: var(--gray-900); font-weight: 700; }
-    .v-step.is-complete .v-step-title { color: var(--gray-600); }
+    .v-step.is-current .v-step-title { color: #281805; font-weight: 700; }
+    .v-step.is-complete .v-step-title { color: #281805; }
+    .v-step.is-partly-complete .v-step-title { color: #281805; }
 
     .v-step-desc {
       margin-top: 6px;
@@ -1202,10 +1190,41 @@ function renderStepForm(stepIndex, titleEl, bodyEl) {
       const fi = e.target.dataset.field;
       if (!stepData[si]) stepData[si] = {};
       stepData[si][fi] = e.target.type === 'checkbox' ? String(e.target.checked) : e.target.value;
+      // Clear error highlight once user fills it
+      e.target.classList.remove('field-error');
+      const errMsg = e.target.parentElement.querySelector('.field-error-msg');
+      if (errMsg) errMsg.remove();
       saveState();
     };
     el.addEventListener('change', save);
     if (el.type !== 'checkbox' && el.tagName !== 'SELECT') el.addEventListener('input', save);
+  });
+}
+
+function highlightMissingFields(stepIndex) {
+  const form = getStepForm(stepIndex);
+  if (!form) return;
+  const data = stepData[stepIndex] || {};
+  form.fields.filter(f => f.required).forEach(f => {
+    const v = data[f.id];
+    const isEmpty = f.type === 'checkbox'
+      ? !(v === 'true' || v === true)
+      : !v || String(v).trim() === '';
+    if (!isEmpty) return;
+    // Find the input/select with matching data-field
+    ['h-step-form-body','v-step-form-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      const el = body.querySelector(`[data-field="${f.id}"]`);
+      if (!el) return;
+      el.classList.add('field-error');
+      if (!el.parentElement.querySelector('.field-error-msg')) {
+        const msg = document.createElement('span');
+        msg.className = 'field-error-msg';
+        msg.textContent = 'This field is required';
+        el.parentElement.appendChild(msg);
+      }
+    });
   });
 }
 
@@ -1221,33 +1240,40 @@ function renderStepForm(stepIndex, titleEl, bodyEl) {
 let hTotal          = 5;
 let hCurrent        = 2;              // start at step 3 to show all states
 let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly complete
+let hCompleted      = new Set([0]);   // step 1 (index 0) pre-completed at init
 
 function dotHtml(state, num, smallDot) {
   const sz  = smallDot ? 11 : 14;
-  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  const pen = svgPencil('white');
   let normal;
   if (state === 'complete')             normal = svgCheck();
-  else if (state === 'current')         normal = svgDot();
-  else if (state === 'partly-complete') normal = svgDash('#0057FF');
+  else if (state === 'partly-complete') normal = svgDash('white');
   else                                  normal = `<span style="font-size:${sz}px">${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
-function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false) {
+function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false, completedSet = null) {
   container.innerHTML = '';
   const dotPx = smallDot ? 24 : 32;
 
   for (let i = 0; i < total; i++) {
-    const isComplete       = i < current && !partlySet.has(i);
-    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isComplete       = completedSet
+      ? completedSet.has(i) && i !== current
+      : i < current && !partlySet.has(i);
+    const isPartlyComplete = completedSet
+      ? partlySet.has(i) && i !== current
+      : i < current && partlySet.has(i);
     const isCurrent        = i === current;
-    const isFuture         = i > current;
+    const isFuture         = !isComplete && !isPartlyComplete && !isCurrent;
 
     // Connector
     if (i > 0) {
       const line = document.createElement('div');
-      // line is blue if the step to its right is current or past
-      line.className = 'h-connector' + (i <= current ? ' complete' : '');
+      // line is blue if the step to its left has been completed or partly-completed
+      const prevDone = completedSet
+        ? (completedSet.has(i - 1) || partlySet.has(i - 1))
+        : i <= current;
+      line.className = 'h-connector' + (prevDone ? ' complete' : '');
       container.appendChild(line);
     }
 
@@ -1269,10 +1295,11 @@ function buildHStepper(container, total, current, smallDot = false, partlySet = 
     const lColor   = isCurrent ? 'var(--gray-900)'
                    : isComplete || isPartlyComplete ? 'var(--gray-600)'
                    : 'var(--gray-400)';
+    const tip      = isComplete ? 'Completed step' : isPartlyComplete ? 'Partly completed step' : isCurrent ? 'Current step' : '';
 
     step.innerHTML = `
       <div class="h-step-inner">
-        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px">
+        <div class="h-dot ${dotState}" style="width:${dotPx}px;height:${dotPx}px"${tip ? ` data-tip="${tip}"` : ''}>
           ${dotHtml(dotState, i + 1, smallDot)}
         </div>
         <span class="h-label" style="font-weight:${lWeight};color:${lColor}">${name}</span>
@@ -1293,12 +1320,11 @@ const SUBMIT_SVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
 
 function renderHStepper() {
   const container = document.getElementById('h-stepper-track');
-  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true);
+  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true, hCompleted);
 
   const isPartly = hPartlyComplete.has(hCurrent);
   const isLast   = hCurrent === hTotal - 1;
-  document.getElementById('h-progress-chip').textContent =
-    `Step ${hCurrent + 1} of ${hTotal}${isPartly ? ' · partly complete' : ''}`;
+  document.getElementById('h-progress-chip').textContent = `Step ${hCurrent + 1} of ${hTotal}`;
   document.getElementById('h-back').disabled = hCurrent === 0;
   const hNextBtn = document.getElementById('h-next');
   hNextBtn.disabled = false;
@@ -1322,15 +1348,33 @@ function renderHStepper() {
 ──────────────────────────────────────────────────────────── */
 document.getElementById('h-next').addEventListener('click', () => {
   hideInlineError('h');
+  const formIdx = hCurrent % STEP_FORMS.length;
   if (hCurrent === hTotal - 1) { handleSubmit('h'); return; }
-  if (hasPartialData()) showModal('h');
-  else showInlineError('h', 'Please complete the required fields on this step before continuing.');
+  if (isStepComplete(formIdx)) {
+    hCompleted.add(hCurrent);
+    hPartlyComplete.delete(hCurrent);
+    hCurrent++;
+    renderHStepper();
+  } else if (hasPartialData(formIdx)) {
+    showModal('h');
+  } else {
+    showInlineError('h', 'Please complete the required fields (*) on this step before continuing.');
+  }
 });
 document.getElementById('v-next').addEventListener('click', () => {
   hideInlineError('v');
+  const formIdx = vCurrent % STEP_FORMS.length;
   if (vCurrent === V_STEPS.length - 1) { handleSubmit('v'); return; }
-  if (hasPartialData()) showModal('v');
-  else showInlineError('v', 'Please complete the required fields on this step before continuing.');
+  if (isStepComplete(formIdx)) {
+    vCompleted.add(vCurrent);
+    vPartlyComplete.delete(vCurrent);
+    vCurrent++;
+    renderVStepper();
+  } else if (hasPartialData(formIdx)) {
+    showModal('v');
+  } else {
+    showInlineError('v', 'Please complete the required fields (*) on this step before continuing.');
+  }
 });
 
 /* ── Back (Backward Navigation) ────────────────────────────
@@ -1408,26 +1452,31 @@ function buildAnatomyStepper() {
 ══════════════════════════════════════════════════════════════ */
 let vCurrent        = 2;
 let vPartlyComplete = new Set([1]);
+let vCompleted      = new Set([0]);
 
 function dotHtmlV(state, num) {
-  const pen = svgPencil(state === 'partly-complete' ? '#0057FF' : 'white');
+  const pen = svgPencil('white');
   let normal;
   if (state === 'complete')             normal = svgCheck();
-  else if (state === 'current')         normal = svgDot();
-  else if (state === 'partly-complete') normal = svgDash('#0057FF');
+  else if (state === 'partly-complete') normal = svgDash('white');
   else                                  normal = `<span>${num}</span>`;
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
-function buildVStepper(container, steps, current, interactive = false, partlySet = new Set()) {
+function buildVStepper(container, steps, current, interactive = false, partlySet = new Set(), completedSet = null) {
   container.innerHTML = '';
   steps.forEach((s, i) => {
-    const isComplete       = i < current && !partlySet.has(i);
-    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isComplete       = completedSet
+      ? completedSet.has(i) && i !== current
+      : i < current && !partlySet.has(i);
+    const isPartlyComplete = completedSet
+      ? partlySet.has(i) && i !== current
+      : i < current && partlySet.has(i);
     const isCurrent        = i === current;
-    const isFuture         = i > current;
+    const isFuture         = !isComplete && !isPartlyComplete && !isCurrent;
 
     const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
+    const tip      = isComplete ? 'Completed step' : isPartlyComplete ? 'Partly completed step' : isCurrent ? 'Current step' : '';
 
     const stepEl = document.createElement('div');
     let cls = 'v-step';
@@ -1443,16 +1492,12 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
 
     stepEl.innerHTML = `
       <div class="v-step-aside">
-        <div class="v-dot ${dotState}">${dotHtmlV(dotState, i + 1)}</div>
+        <div class="v-dot ${dotState}"${tip ? ` data-tip="${tip}"` : ''}>${dotHtmlV(dotState, i + 1)}</div>
         ${lineHtml}
       </div>
       <div class="v-step-body">
-        <div class="v-step-title">${s.label}${isPartlyComplete ? ' <span style="font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:1px 6px;border-radius:4px">Partly complete</span>' : ''}</div>
-        <div class="v-step-desc">${s.desc}
-          ${isCurrent && interactive ? `<div class="step-panel" style="margin-top:12px">
-            <div style="font-size:13px;color:var(--gray-600)">Form content for <strong>${s.label}</strong> appears here.</div>
-          </div>` : ''}
-        </div>
+        <div class="v-step-title">${s.label}</div>
+        <div class="v-step-desc">${s.desc}</div>
       </div>
     `;
 
@@ -1470,7 +1515,7 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
 }
 
 function renderVStepper() {
-  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
+  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete, vCompleted);
   const isPartly = vPartlyComplete.has(vCurrent);
   const isLast   = vCurrent === V_STEPS.length - 1;
 
@@ -1478,7 +1523,6 @@ function renderVStepper() {
   const panel = document.getElementById('v-content-panel');
   panel.innerHTML = `
     <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px">${V_STEPS[vCurrent].label}</div>
-    ${isPartly ? '<div style="display:inline-block;font-size:11px;color:#0057FF;font-weight:600;background:#E8F0FF;padding:2px 8px;border-radius:4px;margin-bottom:12px">Partly complete — resume below</div>' : ''}
     <div style="font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:16px;margin-top:6px">${V_STEPS[vCurrent].desc}</div>
     <div id="v-step-form-body"></div>
   `;
@@ -1563,8 +1607,10 @@ function saveState() {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       hCurrent, hTotal,
       hPartlyComplete: [...hPartlyComplete],
+      hCompleted: [...hCompleted],
       vCurrent,
       vPartlyComplete: [...vPartlyComplete],
+      vCompleted: [...vCompleted],
       stepData,
     }));
   } catch {}
@@ -1576,8 +1622,13 @@ function restoreState() {
     hTotal          = s.hTotal          ?? hTotal;
     hCurrent        = s.hCurrent        ?? hCurrent;
     hPartlyComplete = new Set(s.hPartlyComplete ?? []);
+    // Derive hCompleted from cursor position if not in saved state (old format)
+    hCompleted      = new Set(s.hCompleted ??
+      [...Array(hCurrent).keys()].filter(i => !hPartlyComplete.has(i)));
     vCurrent        = s.vCurrent        ?? vCurrent;
     vPartlyComplete = new Set(s.vPartlyComplete ?? []);
+    vCompleted      = new Set(s.vCompleted ??
+      [...Array(vCurrent).keys()].filter(i => !vPartlyComplete.has(i)));
     stepData        = s.stepData        ?? {};
   } catch {}
 }
