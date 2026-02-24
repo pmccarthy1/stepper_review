@@ -1240,6 +1240,7 @@ function highlightMissingFields(stepIndex) {
 let hTotal          = 5;
 let hCurrent        = 2;              // start at step 3 to show all states
 let hPartlyComplete = new Set([1]);   // step 2 (index 1) pre-set as partly complete
+let hCompleted      = new Set([0]);   // step 1 (index 0) pre-completed at init
 
 function dotHtml(state, num, smallDot) {
   const sz  = smallDot ? 11 : 14;
@@ -1251,21 +1252,28 @@ function dotHtml(state, num, smallDot) {
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
-function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false) {
+function buildHStepper(container, total, current, smallDot = false, partlySet = new Set(), interactive = false, completedSet = null) {
   container.innerHTML = '';
   const dotPx = smallDot ? 24 : 32;
 
   for (let i = 0; i < total; i++) {
-    const isComplete       = i < current && !partlySet.has(i);
-    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isComplete       = completedSet
+      ? completedSet.has(i) && i !== current
+      : i < current && !partlySet.has(i);
+    const isPartlyComplete = completedSet
+      ? partlySet.has(i) && i !== current
+      : i < current && partlySet.has(i);
     const isCurrent        = i === current;
-    const isFuture         = i > current;
+    const isFuture         = !isComplete && !isPartlyComplete && !isCurrent;
 
     // Connector
     if (i > 0) {
       const line = document.createElement('div');
-      // line is blue if the step to its right is current or past
-      line.className = 'h-connector' + (i <= current ? ' complete' : '');
+      // line is blue if the step to its left has been completed or partly-completed
+      const prevDone = completedSet
+        ? (completedSet.has(i - 1) || partlySet.has(i - 1))
+        : i <= current;
+      line.className = 'h-connector' + (prevDone ? ' complete' : '');
       container.appendChild(line);
     }
 
@@ -1312,7 +1320,7 @@ const SUBMIT_SVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
 
 function renderHStepper() {
   const container = document.getElementById('h-stepper-track');
-  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true);
+  buildHStepper(container, hTotal, hCurrent, false, hPartlyComplete, true, hCompleted);
 
   const isPartly = hPartlyComplete.has(hCurrent);
   const isLast   = hCurrent === hTotal - 1;
@@ -1343,6 +1351,7 @@ document.getElementById('h-next').addEventListener('click', () => {
   const formIdx = hCurrent % STEP_FORMS.length;
   if (hCurrent === hTotal - 1) { handleSubmit('h'); return; }
   if (isStepComplete(formIdx)) {
+    hCompleted.add(hCurrent);
     hPartlyComplete.delete(hCurrent);
     hCurrent++;
     renderHStepper();
@@ -1357,6 +1366,7 @@ document.getElementById('v-next').addEventListener('click', () => {
   const formIdx = vCurrent % STEP_FORMS.length;
   if (vCurrent === V_STEPS.length - 1) { handleSubmit('v'); return; }
   if (isStepComplete(formIdx)) {
+    vCompleted.add(vCurrent);
     vPartlyComplete.delete(vCurrent);
     vCurrent++;
     renderVStepper();
@@ -1442,6 +1452,7 @@ function buildAnatomyStepper() {
 ══════════════════════════════════════════════════════════════ */
 let vCurrent        = 2;
 let vPartlyComplete = new Set([1]);
+let vCompleted      = new Set([0]);
 
 function dotHtmlV(state, num) {
   const pen = svgPencil('white');
@@ -1452,13 +1463,17 @@ function dotHtmlV(state, num) {
   return `<span class="dot-normal">${normal}</span><span class="dot-pencil">${pen}</span>`;
 }
 
-function buildVStepper(container, steps, current, interactive = false, partlySet = new Set()) {
+function buildVStepper(container, steps, current, interactive = false, partlySet = new Set(), completedSet = null) {
   container.innerHTML = '';
   steps.forEach((s, i) => {
-    const isComplete       = i < current && !partlySet.has(i);
-    const isPartlyComplete = i < current &&  partlySet.has(i);
+    const isComplete       = completedSet
+      ? completedSet.has(i) && i !== current
+      : i < current && !partlySet.has(i);
+    const isPartlyComplete = completedSet
+      ? partlySet.has(i) && i !== current
+      : i < current && partlySet.has(i);
     const isCurrent        = i === current;
-    const isFuture         = i > current;
+    const isFuture         = !isComplete && !isPartlyComplete && !isCurrent;
 
     const dotState = isComplete ? 'complete' : isPartlyComplete ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
     const tip      = isComplete ? 'Completed step' : isPartlyComplete ? 'Partly completed step' : isCurrent ? 'Current step' : '';
@@ -1500,7 +1515,7 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
 }
 
 function renderVStepper() {
-  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete);
+  buildVStepper(document.getElementById('v-stepper-track'), V_STEPS, vCurrent, true, vPartlyComplete, vCompleted);
   const isPartly = vPartlyComplete.has(vCurrent);
   const isLast   = vCurrent === V_STEPS.length - 1;
 
@@ -1592,8 +1607,10 @@ function saveState() {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       hCurrent, hTotal,
       hPartlyComplete: [...hPartlyComplete],
+      hCompleted: [...hCompleted],
       vCurrent,
       vPartlyComplete: [...vPartlyComplete],
+      vCompleted: [...vCompleted],
       stepData,
     }));
   } catch {}
@@ -1605,8 +1622,13 @@ function restoreState() {
     hTotal          = s.hTotal          ?? hTotal;
     hCurrent        = s.hCurrent        ?? hCurrent;
     hPartlyComplete = new Set(s.hPartlyComplete ?? []);
+    // Derive hCompleted from cursor position if not in saved state (old format)
+    hCompleted      = new Set(s.hCompleted ??
+      [...Array(hCurrent).keys()].filter(i => !hPartlyComplete.has(i)));
     vCurrent        = s.vCurrent        ?? vCurrent;
     vPartlyComplete = new Set(s.vPartlyComplete ?? []);
+    vCompleted      = new Set(s.vCompleted ??
+      [...Array(vCurrent).keys()].filter(i => !vPartlyComplete.has(i)));
     stepData        = s.stepData        ?? {};
   } catch {}
 }
