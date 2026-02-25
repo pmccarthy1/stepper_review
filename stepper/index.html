@@ -783,6 +783,137 @@
       .section-body { padding: 24px 16px 32px; }
       .h-label { font-size: 10px; }
     }
+
+    /* ══════════════════════════════════════════════════════════
+       CONDITIONAL STEPPER
+    ══════════════════════════════════════════════════════════ */
+    .choice-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .choice-card {
+      flex: 1;
+      min-width: 180px;
+      border: 2px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, transform .15s;
+      background: var(--white);
+      text-align: left;
+    }
+    .choice-card:hover {
+      border-color: var(--blue-primary);
+      background: #F0F5FF;
+      transform: translateY(-2px);
+    }
+    .choice-card.selected {
+      border-color: var(--blue-primary);
+      background: #EAF1FF;
+    }
+    .choice-card .choice-icon { font-size: 24px; margin-bottom: 8px; }
+    .choice-card .choice-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+    .choice-card .choice-desc {
+      font-size: 12px;
+      color: var(--gray-600);
+      line-height: 1.5;
+    }
+    .path-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #E0ECFE;
+      color: var(--blue-primary);
+      margin-bottom: 16px;
+      transition: opacity .3s;
+    }
+    .path-tag.hidden { opacity: 0; }
+    .path-tag .path-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+    }
+    .cond-step-new {
+      animation: slideIn .3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .cond-step-content {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 20px 24px;
+      background: white;
+      margin-top: 20px;
+    }
+    .cond-step-content h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .cond-field-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 14px;
+    }
+    .cond-field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    .cond-field-input {
+      height: 38px;
+      padding: 0 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: white;
+      width: 100%;
+      max-width: 440px;
+    }
+    .cond-field-select {
+      height: 38px;
+      padding: 0 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: white;
+      width: 100%;
+      max-width: 440px;
+    }
+    .branch-changed-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #FFF8E1;
+      border: 1.5px solid #FFD54F;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #5D4037;
+      margin-bottom: 16px;
+      animation: slideIn .3s ease;
+    }
+    .branch-changed-banner.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -801,6 +932,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" data-tab="horizontal">Horizontal Stepper</button>
     <button class="tab-btn" data-tab="vertical">Vertical Stepper</button>
+    <button class="tab-btn" data-tab="conditional">Conditional Logic</button>
     <button class="tab-btn" data-tab="states">Anatomy &amp; States</button>
   </div>
 
@@ -948,6 +1080,120 @@
     </div>
 
   </div><!-- /tab-vertical -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 3 – CONDITIONAL LOGIC
+  ══════════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-conditional">
+
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Conditional Flow</h2>
+        <span class="variant-tag">Step 1 selection changes path</span>
+      </div>
+      <div class="section-body">
+
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:24px;line-height:1.6">Select a request type in Step 1. The stepper immediately updates to show only the steps relevant to that path — removing irrelevant steps and introducing contextual ones.</p>
+
+        <!-- Path tag -->
+        <div class="path-tag hidden" id="cond-path-tag">
+          <span class="path-dot"></span>
+          <span id="cond-path-label">Path</span>
+        </div>
+
+        <!-- Branch changed banner -->
+        <div class="branch-changed-banner hidden" id="cond-branch-banner">
+          ⚡ Path updated — steps have changed based on your selection.
+        </div>
+
+        <!-- Conditional stepper track -->
+        <div class="h-stepper" id="cond-stepper-track" style="margin-bottom:0"></div>
+
+        <!-- Step content -->
+        <div class="cond-step-content" id="cond-step-content"></div>
+
+        <!-- Nav -->
+        <div class="nav-row" style="margin-top:24px">
+          <button class="btn btn-secondary" id="cond-back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back
+          </button>
+          <button class="btn btn-primary" id="cond-next" disabled>
+            Next
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div id="cond-inline-msg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+
+      </div>
+    </div>
+
+    <!-- Path reference -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Branch Map</h2>
+        <span class="variant-tag">Reference</span>
+      </div>
+      <div class="section-body">
+        <div style="display:flex;flex-direction:column;gap:20px">
+
+          <div style="display:flex;align-items:flex-start;gap:16px">
+            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:18px">📋</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">New Policy Application <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(5 steps)</span></div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Eligibility</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Personal Info</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Coverage</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Payment</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:16px">
+            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#E8EAF6;display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">Update Beneficiary <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(4 steps)</span></div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Verify Identity</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Beneficiary Details</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Confirm</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:16px">
+            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:18px">🗂️</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">File a Claim <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(5 steps)</span></div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Policy Verification</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Incident Details</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Documentation</span>
+                <span style="color:var(--gray-400);font-size:11px">→</span>
+                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Review</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-conditional -->
 
   <!-- ══════════════════════════════════════════════
        TAB 3 – ANATOMY & STATES
@@ -1721,6 +1967,233 @@ buildMobileStepper();
 renderVStepper();
 buildV3();
 buildAnatomyStepper();
+
+/* ══════════════════════════════════════════════════════════════
+   CONDITIONAL STEPPER ENGINE
+══════════════════════════════════════════════════════════════ */
+const COND_PATHS = {
+  new_policy: {
+    label: 'New Policy Application',
+    steps: ['Request Type', 'Eligibility', 'Personal Info', 'Coverage', 'Payment'],
+    content: [
+      null, // step 0 = choice UI, rendered separately
+      { title: 'Eligibility Check', fields: [
+        { label: 'Date of birth', type: 'input', placeholder: 'MM/DD/YYYY' },
+        { label: 'State of residence', type: 'select', options: ['Select state…', 'California', 'Texas', 'New York', 'Florida', 'Other'] },
+        { label: 'Tobacco use in last 12 months?', type: 'select', options: ['Select…', 'No', 'Yes'] },
+      ]},
+      { title: 'Personal Information', fields: [
+        { label: 'Full legal name', type: 'input', placeholder: 'Jane A. Doe' },
+        { label: 'Social Security Number', type: 'input', placeholder: '•••-••-••••' },
+        { label: 'Phone number', type: 'input', placeholder: '555-0100' },
+      ]},
+      { title: 'Coverage Selection', fields: [
+        { label: 'Coverage type', type: 'select', options: ['Select…', 'Term Life — 10yr', 'Term Life — 20yr', 'Whole Life', 'Universal Life'] },
+        { label: 'Coverage amount', type: 'select', options: ['Select…', '$250,000', '$500,000', '$1,000,000', '$2,000,000'] },
+      ]},
+      { title: 'Payment Setup', fields: [
+        { label: 'Payment method', type: 'select', options: ['Select…', 'Bank account (ACH)', 'Credit card', 'Debit card'] },
+        { label: 'Billing frequency', type: 'select', options: ['Select…', 'Monthly', 'Quarterly', 'Annually'] },
+      ]},
+    ],
+  },
+  update_beneficiary: {
+    label: 'Update Beneficiary',
+    steps: ['Request Type', 'Verify Identity', 'Beneficiary Details', 'Confirm'],
+    content: [
+      null,
+      { title: 'Verify Your Identity', fields: [
+        { label: 'Policy number', type: 'input', placeholder: 'POL-000000' },
+        { label: 'Last 4 digits of SSN', type: 'input', placeholder: '0000' },
+      ]},
+      { title: 'Beneficiary Details', fields: [
+        { label: 'Full name', type: 'input', placeholder: 'Full legal name' },
+        { label: 'Relationship', type: 'select', options: ['Select…', 'Spouse', 'Child', 'Parent', 'Sibling', 'Other'] },
+        { label: 'Percentage of benefit', type: 'select', options: ['Select…', '100%', '75%', '50%', '25%'] },
+      ]},
+      { title: 'Review & Confirm', fields: [
+        { label: 'Confirm all beneficiary information is accurate', type: 'checkbox' },
+      ]},
+    ],
+  },
+  file_claim: {
+    label: 'File a Claim',
+    steps: ['Request Type', 'Policy Verification', 'Incident Details', 'Documentation', 'Review'],
+    content: [
+      null,
+      { title: 'Policy Verification', fields: [
+        { label: 'Policy number', type: 'input', placeholder: 'POL-000000' },
+        { label: 'Policy type', type: 'select', options: ['Select…', 'Life', 'Annuity', 'Long-Term Care'] },
+      ]},
+      { title: 'Incident Details', fields: [
+        { label: 'Date of incident', type: 'input', placeholder: 'MM/DD/YYYY' },
+        { label: 'Incident type', type: 'select', options: ['Select…', 'Death benefit', 'Disability', 'Long-term care event', 'Other'] },
+        { label: 'Brief description', type: 'input', placeholder: 'Describe the event…' },
+      ]},
+      { title: 'Documentation Upload', fields: [
+        { label: 'Supporting document type', type: 'select', options: ['Select…', 'Death certificate', 'Medical records', 'Physician statement', 'Other'] },
+        { label: 'Note: Upload your documents after submission via the portal', type: 'info' },
+      ]},
+      { title: 'Final Review', fields: [
+        { label: 'All information provided is accurate to the best of my knowledge', type: 'checkbox' },
+        { label: 'I authorize the release of relevant medical records', type: 'checkbox' },
+      ]},
+    ],
+  },
+};
+
+let condPath    = null; // null = no path chosen yet
+let condCurrent = 0;    // current step index
+let condPrev    = null; // previous path key (to detect branch change)
+
+function renderCondStepper() {
+  const track   = document.getElementById('cond-stepper-track');
+  const content = document.getElementById('cond-step-content');
+  const pathTag = document.getElementById('cond-path-tag');
+  const pathLbl = document.getElementById('cond-path-label');
+  const banner  = document.getElementById('cond-branch-banner');
+  const nextBtn = document.getElementById('cond-next');
+  const backBtn = document.getElementById('cond-back');
+
+  const pathData = condPath ? COND_PATHS[condPath] : null;
+  const steps    = pathData ? pathData.steps : ['Request Type'];
+  const total    = steps.length;
+
+  // Stepper track
+  track.innerHTML = '';
+  steps.forEach((name, i) => {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'h-connector' + (i <= condCurrent ? ' complete' : '');
+      track.appendChild(line);
+    }
+    const step = document.createElement('div');
+    const isComplete = i < condCurrent;
+    const isCurrent  = i === condCurrent;
+    const isFuture   = i > condCurrent;
+    let cls = 'h-step';
+    if (isCurrent)  cls += ' is-current';
+    if (isComplete) cls += ' is-complete';
+    if (isFuture)   cls += ' is-future';
+    step.className = cls;
+    if (i !== 0) step.classList.add('cond-step-new');
+    const dotState = isComplete ? 'complete' : isCurrent ? 'current' : 'incomplete';
+    const lColor   = isCurrent ? 'var(--gray-900)' : isComplete ? 'var(--gray-600)' : 'var(--gray-400)';
+    const lWeight  = isCurrent ? '700' : '400';
+    step.innerHTML = `
+      <div class="h-step-inner">
+        <div class="h-dot ${dotState}">
+          <span class="dot-normal">${isComplete ? svgCheck() : `<span style="font-size:13px">${i+1}</span>`}</span>
+        </div>
+        <span class="h-label" style="color:${lColor};font-weight:${lWeight}">${name}</span>
+      </div>`;
+    track.appendChild(step);
+  });
+
+  // Path tag
+  if (pathData) {
+    pathLbl.textContent = pathData.label;
+    pathTag.classList.remove('hidden');
+  } else {
+    pathTag.classList.add('hidden');
+  }
+
+  // Branch changed banner
+  if (condPrev && condPrev !== condPath) {
+    banner.classList.remove('hidden');
+    setTimeout(() => banner.classList.add('hidden'), 3500);
+  }
+  condPrev = condPath;
+
+  // Step content
+  const isLast = pathData && condCurrent === total - 1;
+  backBtn.disabled = condCurrent === 0;
+  nextBtn.disabled = condCurrent === 0 && !condPath; // disabled on step 0 until a choice is made
+  nextBtn.innerHTML = isLast
+    ? `Submit <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polyline points="4,10 8.5,14.5 16,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    : `Next <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  if (condCurrent === 0) {
+    // Choice cards
+    content.innerHTML = `
+      <h4 style="font-size:14px;font-weight:700;color:var(--gray-900);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)">What do you need help with today?</h4>
+      <div class="choice-grid">
+        <div class="choice-card ${ condPath === 'new_policy' ? 'selected' : '' }" data-choice="new_policy">
+          <div class="choice-icon">📋</div>
+          <div class="choice-title">New Policy Application</div>
+          <div class="choice-desc">Apply for a new life, annuity, or long-term care policy.</div>
+        </div>
+        <div class="choice-card ${ condPath === 'update_beneficiary' ? 'selected' : '' }" data-choice="update_beneficiary">
+          <div class="choice-icon">👤</div>
+          <div class="choice-title">Update Beneficiary</div>
+          <div class="choice-desc">Change or add a beneficiary on an existing policy.</div>
+        </div>
+        <div class="choice-card ${ condPath === 'file_claim' ? 'selected' : '' }" data-choice="file_claim">
+          <div class="choice-icon">🗂️</div>
+          <div class="choice-title">File a Claim</div>
+          <div class="choice-desc">Submit a claim for a death benefit, disability, or care event.</div>
+        </div>
+      </div>`;
+
+    // Wire choice card clicks
+    content.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const prev = condPath;
+        condPath = card.dataset.choice;
+        condCurrent = 0; // stay on step 0
+        if (prev !== condPath) condPrev = prev;
+        renderCondStepper();
+      });
+    });
+  } else {
+    // Form content for this path step
+    const stepDef = pathData.content[condCurrent];
+    if (!stepDef) { content.innerHTML = ''; return; }
+    let fieldsHtml = '';
+    (stepDef.fields || []).forEach(f => {
+      if (f.type === 'checkbox') {
+        fieldsHtml += `<div class="cond-field-row"><label style="display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--blue-primary)">${f.label}</label></div>`;
+      } else if (f.type === 'select') {
+        const opts = f.options.map(o => `<option>${o}</option>`).join('');
+        fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><select class="cond-field-select">${opts}</select></div>`;
+      } else if (f.type === 'info') {
+        fieldsHtml += `<div style="padding:10px 14px;background:#F0F5FF;border-radius:6px;font-size:13px;color:var(--gray-600);margin-bottom:8px">ℹ️ ${f.label}</div>`;
+      } else {
+        fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><input type="text" class="cond-field-input" placeholder="${f.placeholder || ''}"></div>`;
+      }
+    });
+    content.innerHTML = `<h4>${stepDef.title}</h4>${fieldsHtml}`;
+  }
+
+  // Inline message
+  document.getElementById('cond-inline-msg').style.display = 'none';
+}
+
+document.getElementById('cond-next').addEventListener('click', () => {
+  if (!condPath) {
+    const msg = document.getElementById('cond-inline-msg');
+    msg.style.cssText = 'display:block;background:#FFF3F3;border:1.5px solid #F44336;color:#B71C1C';
+    msg.textContent = 'Please select a request type before continuing.';
+    return;
+  }
+  const total = COND_PATHS[condPath].steps.length;
+  if (condCurrent === total - 1) {
+    const msg = document.getElementById('cond-inline-msg');
+    msg.style.cssText = 'display:block;background:#E8F5E9;border:1.5px solid #4CAF50;color:#1B5E20';
+    msg.textContent = '✅ Submitted successfully!';
+    return;
+  }
+  condCurrent++;
+  renderCondStepper();
+});
+
+document.getElementById('cond-back').addEventListener('click', () => {
+  if (condCurrent === 0) return;
+  condCurrent--;
+  renderCondStepper();
+});
+
+renderCondStepper();
 </script>
 </body>
 </html>
