@@ -916,6 +916,33 @@
     }
     .branch-changed-banner.hidden { display: none; }
 
+    /* ── Spawned / internal-branch steps ─────────────────────── */
+    .h-dot.spawned { background:#6B48C8; border:4px solid #6B48C8; color:white; }
+    .h-connector.spawned { background:#6B48C8; }
+    .h-step.is-spawned .h-label { color:#4527A0 !important; }
+    .spawn-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      background:#EDE7FF; border:1px solid #B39DDB; color:#4527A0;
+      border-radius:12px; padding:3px 10px; font-size:11px; font-weight:600;
+      margin-bottom:12px;
+    }
+    .spawn-pill-dot { width:6px;height:6px;border-radius:50%;background:#6B48C8;flex-shrink:0; }
+    .spawn-gate-banner {
+      display:flex; align-items:center; gap:8px;
+      background:#EDE7FF; border:1.5px solid #B39DDB; border-radius:8px;
+      padding:10px 14px; font-size:13px; color:#4527A0;
+      margin-bottom:14px; animation:slideIn .3s ease;
+    }
+    .spawn-gate-banner.hidden { display:none; }
+    .branch-map-step { font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600); }
+    .branch-map-step.spawned { background:#EDE7FF;color:#4527A0;border:1px solid #B39DDB; }
+    .branch-trigger-tag {
+      display:inline-flex; align-items:center; gap:3px;
+      background:#FFF8E1; border:1px solid #FFD54F; color:#6D4C00;
+      border-radius:10px; padding:2px 7px; font-size:10px; font-weight:600;
+      margin-left:4px; vertical-align:middle;
+    }
+
     /* ══════════════════════════════════════════════
        BLACK THEME
     ══════════════════════════════════════════════ */
@@ -1155,11 +1182,11 @@
     <div class="section-card">
       <div class="section-header">
         <h2>Conditional Flow</h2>
-        <span class="variant-tag">Step 1 selection changes path</span>
+        <span class="variant-tag">Internal branching · step-level conditions</span>
       </div>
       <div class="section-body">
 
-        <p style="font-size:13px;color:var(--gray-600);margin-bottom:24px;line-height:1.6">Select a request type in Step 1. The stepper immediately updates to show only the steps relevant to that path — removing irrelevant steps and introducing contextual ones.</p>
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:24px;line-height:1.6">Step 1 sets the top-level path. Within each path, certain steps contain <strong>internal conditions</strong> — a selection inside that step immediately spawns additional steps (shown in <span style="color:#4527A0;font-weight:600">purple</span>) into the flow before you advance.</p>
 
         <!-- Path tag -->
         <div class="path-tag hidden" id="cond-path-tag">
@@ -1172,8 +1199,20 @@
           ⚡ Path updated — steps have changed based on your selection.
         </div>
 
+        <!-- Spawn gate banner -->
+        <div class="spawn-gate-banner hidden" id="cond-spawn-banner">
+          <span style="font-size:16px">⑂</span>
+          <span id="cond-spawn-banner-text">Your selection added steps to this flow.</span>
+        </div>
+
         <!-- Conditional stepper track -->
         <div class="h-stepper" id="cond-stepper-track" style="margin-bottom:0"></div>
+
+        <!-- Spawn pill (shown when sub-path is active) -->
+        <div class="spawn-pill hidden" id="cond-spawn-pill" style="margin-top:10px">
+          <span class="spawn-pill-dot"></span>
+          <span id="cond-spawn-pill-text">Sub-path active</span>
+        </div>
 
         <!-- Step content -->
         <div class="cond-step-content" id="cond-step-content"></div>
@@ -1194,67 +1233,15 @@
       </div>
     </div>
 
-    <!-- Path reference -->
+    <!-- Live Branch Map (dynamically rendered) -->
     <div class="section-card" style="margin-top:32px">
       <div class="section-header">
-        <h2>Branch Map</h2>
-        <span class="variant-tag">Reference</span>
+        <h2>Live Branch Map</h2>
+        <span class="variant-tag" id="cond-map-tag">Select a path to see internal branches</span>
       </div>
-      <div class="section-body">
-        <div style="display:flex;flex-direction:column;gap:20px">
-
-          <div style="display:flex;align-items:flex-start;gap:16px">
-            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:18px">📋</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">New Policy Application <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(5 steps)</span></div>
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Eligibility</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Personal Info</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Coverage</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Payment</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:16px">
-            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#E8EAF6;display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">Update Beneficiary <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(4 steps)</span></div>
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Verify Identity</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Beneficiary Details</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Confirm</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:16px">
-            <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:18px">🗂️</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:4px">File a Claim <span style="font-size:11px;font-weight:400;color:var(--gray-400)">(5 steps)</span></div>
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Request Type</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Policy Verification</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Incident Details</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Documentation</span>
-                <span style="color:var(--gray-400);font-size:11px">→</span>
-                <span style="font-size:11px;background:#f2f2f2;padding:2px 8px;border-radius:4px;color:var(--gray-600)">Review</span>
-              </div>
-            </div>
-          </div>
-
+      <div class="section-body" style="padding:24px 32px">
+        <div id="cond-branch-map">
+          <p style="font-size:13px;color:var(--gray-400)">No path selected yet. Choose a request type in Step 1 to populate this map.</p>
         </div>
       </div>
     </div>
@@ -2355,26 +2342,26 @@ buildV3();
 buildAnatomyStepper();
 
 /* ══════════════════════════════════════════════════════════════
-   CONDITIONAL STEPPER ENGINE
+   CONDITIONAL STEPPER ENGINE  (internal branching edition)
 ══════════════════════════════════════════════════════════════ */
 const COND_PATHS = {
   new_policy: {
     label: 'New Policy Application',
-    steps: ['Request Type', 'Eligibility', 'Personal Info', 'Coverage', 'Payment'],
-    content: [
-      null, // step 0 = choice UI, rendered separately
+    icon: '📋',
+    baseSteps: ['Request Type', 'Eligibility', 'Coverage', 'Payment'],
+    baseContent: [
+      null, // step 0 = choice UI
       { title: 'Eligibility Check', fields: [
         { label: 'Date of birth', type: 'input', placeholder: 'MM/DD/YYYY' },
-        { label: 'State of residence', type: 'select', options: ['Select state…', 'California', 'Texas', 'New York', 'Florida', 'Other'] },
         { label: 'Tobacco use in last 12 months?', type: 'select', options: ['Select…', 'No', 'Yes'] },
-      ]},
-      { title: 'Personal Information', fields: [
-        { label: 'Full legal name', type: 'input', placeholder: 'Jane A. Doe' },
-        { label: 'Social Security Number', type: 'input', placeholder: '•••-••-••••' },
-        { label: 'Phone number', type: 'input', placeholder: '555-0100' },
+        { label: 'State of residence', type: 'branch-select', branchKey: 'state_branch',
+          options: ['Select state…', 'California', 'Texas', 'New York', 'Florida', 'Other'],
+          hint: 'CA or NY selections add a state-specific compliance step.' },
       ]},
       { title: 'Coverage Selection', fields: [
-        { label: 'Coverage type', type: 'select', options: ['Select…', 'Term Life — 10yr', 'Term Life — 20yr', 'Whole Life', 'Universal Life'] },
+        { label: 'Coverage type', type: 'branch-select', branchKey: 'coverage_branch',
+          options: ['Select…', 'Term Life — 10yr', 'Term Life — 20yr', 'Whole Life', 'Universal Life'],
+          hint: 'Permanent life products add investment / risk profile steps.' },
         { label: 'Coverage amount', type: 'select', options: ['Select…', '$250,000', '$500,000', '$1,000,000', '$2,000,000'] },
       ]},
       { title: 'Payment Setup', fields: [
@@ -2382,30 +2369,118 @@ const COND_PATHS = {
         { label: 'Billing frequency', type: 'select', options: ['Select…', 'Monthly', 'Quarterly', 'Annually'] },
       ]},
     ],
+    branches: {
+      state_branch: {
+        afterBaseIndex: 1, triggerLabel: 'State of residence',
+        map: {
+          'California': { steps: ['CA Compliance'], content: [
+            { title: 'California Compliance', fields: [
+              { label: 'CA insurance disclosure acknowledged', type: 'checkbox' },
+              { label: 'Replacement policy?', type: 'select', options: ['Select…', 'No', 'Yes'] },
+            ]},
+          ]},
+          'New York': { steps: ['NY Suitability'], content: [
+            { title: 'New York Suitability Review', fields: [
+              { label: 'Annual household income', type: 'select', options: ['Select…', 'Under $50k', '$50k–$100k', '$100k–$250k', 'Over $250k'] },
+              { label: 'NY suitability form acknowledged', type: 'checkbox' },
+            ]},
+          ]},
+        },
+      },
+      coverage_branch: {
+        afterBaseIndex: 2, triggerLabel: 'Coverage type',
+        map: {
+          'Whole Life': { steps: ['Investment Preferences'], content: [
+            { title: 'Investment Preferences', fields: [
+              { label: 'Preferred dividend option', type: 'select', options: ['Select…', 'Paid-up additions', 'Cash', 'Reduce premium', 'Accumulate at interest'] },
+              { label: 'Loan interest option', type: 'select', options: ['Select…', 'Fixed', 'Variable'] },
+            ]},
+          ]},
+          'Universal Life': { steps: ['Investment Preferences', 'Risk Profile'], content: [
+            { title: 'Investment Preferences', fields: [
+              { label: 'Index strategy', type: 'select', options: ['Select…', 'Fixed account', 'S&P 500 indexed', 'Global multi-index'] },
+              { label: 'Premium allocation', type: 'select', options: ['Select…', '100% indexed', '50/50 split', 'Custom'] },
+            ]},
+            { title: 'Risk Profile', fields: [
+              { label: 'Investment experience', type: 'select', options: ['Select…', 'None', 'Limited', 'Moderate', 'Extensive'] },
+              { label: 'Risk tolerance', type: 'select', options: ['Select…', 'Conservative', 'Moderate', 'Aggressive'] },
+            ]},
+          ]},
+        },
+      },
+    },
   },
+
   update_beneficiary: {
     label: 'Update Beneficiary',
-    steps: ['Request Type', 'Verify Identity', 'Beneficiary Details', 'Confirm'],
-    content: [
+    icon: '👤',
+    baseSteps: ['Request Type', 'Verify Identity', 'Beneficiary Details', 'Confirm'],
+    baseContent: [
       null,
       { title: 'Verify Your Identity', fields: [
         { label: 'Policy number', type: 'input', placeholder: 'POL-000000' },
         { label: 'Last 4 digits of SSN', type: 'input', placeholder: '0000' },
+        { label: 'Policy ownership', type: 'branch-select', branchKey: 'ownership_branch',
+          options: ['Select…', 'Individual', 'Joint policy', 'Trust-owned'],
+          hint: 'Non-individual ownership adds verification steps.' },
       ]},
       { title: 'Beneficiary Details', fields: [
         { label: 'Full name', type: 'input', placeholder: 'Full legal name' },
         { label: 'Relationship', type: 'select', options: ['Select…', 'Spouse', 'Child', 'Parent', 'Sibling', 'Other'] },
+        { label: 'Beneficiary is a minor?', type: 'branch-select', branchKey: 'minor_branch',
+          options: ['Select…', 'No', 'Yes — under 18'],
+          hint: 'Minor designations require a guardian or trustee step.' },
         { label: 'Percentage of benefit', type: 'select', options: ['Select…', '100%', '75%', '50%', '25%'] },
       ]},
       { title: 'Review & Confirm', fields: [
         { label: 'Confirm all beneficiary information is accurate', type: 'checkbox' },
       ]},
     ],
+    branches: {
+      ownership_branch: {
+        afterBaseIndex: 1, triggerLabel: 'Policy ownership',
+        map: {
+          'Joint policy': { steps: ['Joint Owner Verification'], content: [
+            { title: 'Joint Owner Verification', fields: [
+              { label: 'Joint owner full name', type: 'input', placeholder: 'Full legal name' },
+              { label: 'Joint owner SSN (last 4)', type: 'input', placeholder: '0000' },
+              { label: 'Joint owner consent acknowledged', type: 'checkbox' },
+            ]},
+          ]},
+          'Trust-owned': { steps: ['Trust Details', 'Trustee Verification'], content: [
+            { title: 'Trust Details', fields: [
+              { label: 'Trust name', type: 'input', placeholder: 'The Smith Family Trust' },
+              { label: 'Trust EIN', type: 'input', placeholder: '00-0000000' },
+              { label: 'Trust type', type: 'select', options: ['Select…', 'Revocable', 'Irrevocable'] },
+            ]},
+            { title: 'Trustee Verification', fields: [
+              { label: 'Trustee full name', type: 'input', placeholder: 'Full legal name' },
+              { label: 'Trustee SSN (last 4)', type: 'input', placeholder: '0000' },
+              { label: 'Trustee authority acknowledged', type: 'checkbox' },
+            ]},
+          ]},
+        },
+      },
+      minor_branch: {
+        afterBaseIndex: 2, triggerLabel: 'Beneficiary is a minor?',
+        map: {
+          'Yes — under 18': { steps: ['Guardian / Trustee'], content: [
+            { title: 'Guardian or Trustee Information', fields: [
+              { label: 'Guardian / Trustee full name', type: 'input', placeholder: 'Full legal name' },
+              { label: 'Relationship to minor', type: 'select', options: ['Select…', 'Parent', 'Legal guardian', 'Trustee'] },
+              { label: 'UTMA / custodial account?', type: 'select', options: ['Select…', 'No', 'Yes'] },
+            ]},
+          ]},
+        },
+      },
+    },
   },
+
   file_claim: {
     label: 'File a Claim',
-    steps: ['Request Type', 'Policy Verification', 'Incident Details', 'Documentation', 'Review'],
-    content: [
+    icon: '🗂️',
+    baseSteps: ['Request Type', 'Policy Verification', 'Incident Details', 'Documentation', 'Review'],
+    baseContent: [
       null,
       { title: 'Policy Verification', fields: [
         { label: 'Policy number', type: 'input', placeholder: 'POL-000000' },
@@ -2413,7 +2488,9 @@ const COND_PATHS = {
       ]},
       { title: 'Incident Details', fields: [
         { label: 'Date of incident', type: 'input', placeholder: 'MM/DD/YYYY' },
-        { label: 'Incident type', type: 'select', options: ['Select…', 'Death benefit', 'Disability', 'Long-term care event', 'Other'] },
+        { label: 'Claim type', type: 'branch-select', branchKey: 'claim_branch',
+          options: ['Select…', 'Death benefit', 'Disability', 'Long-term care event', 'Other'],
+          hint: 'Claim type determines supplemental verification steps.' },
         { label: 'Brief description', type: 'input', placeholder: 'Describe the event…' },
       ]},
       { title: 'Documentation Upload', fields: [
@@ -2425,35 +2502,130 @@ const COND_PATHS = {
         { label: 'I authorize the release of relevant medical records', type: 'checkbox' },
       ]},
     ],
+    branches: {
+      claim_branch: {
+        afterBaseIndex: 2, triggerLabel: 'Claim type',
+        map: {
+          'Death benefit': { steps: ['Claimant Info'], content: [
+            { title: 'Claimant Information', fields: [
+              { label: 'Claimant full name', type: 'input', placeholder: 'Full legal name' },
+              { label: 'Relationship to insured', type: 'select', options: ['Select…', 'Spouse', 'Child', 'Estate', 'Other'] },
+              { label: 'Date of death', type: 'input', placeholder: 'MM/DD/YYYY' },
+            ]},
+          ]},
+          'Disability': { steps: ['Medical Authorization'], content: [
+            { title: 'Medical Authorization', fields: [
+              { label: 'Treating physician name', type: 'input', placeholder: 'Dr. First Last' },
+              { label: 'Diagnosis / condition', type: 'input', placeholder: 'Brief description' },
+              { label: 'Authorization to release medical records acknowledged', type: 'checkbox' },
+            ]},
+          ]},
+          'Long-term care event': { steps: ['Care Provider Info', 'Physician Statement'], content: [
+            { title: 'Care Provider Information', fields: [
+              { label: 'Care facility / provider name', type: 'input', placeholder: 'Provider or facility name' },
+              { label: 'Care type', type: 'select', options: ['Select…', 'In-home care', 'Assisted living', 'Nursing facility', 'Memory care'] },
+              { label: 'Care start date', type: 'input', placeholder: 'MM/DD/YYYY' },
+            ]},
+            { title: 'Physician Statement', fields: [
+              { label: 'Attending physician name', type: 'input', placeholder: 'Dr. First Last' },
+              { label: 'Licensed in state', type: 'select', options: ['Select state…', 'California', 'Texas', 'New York', 'Florida', 'Other'] },
+              { label: 'Physician statement submitted', type: 'checkbox' },
+            ]},
+          ]},
+        },
+      },
+    },
   },
 };
 
-let condPath    = null; // null = no path chosen yet
-let condCurrent = 0;    // current step index
-let condPrev    = null; // previous path key (to detect branch change)
+/* ─── Runtime state ────────────────────────────────────────── */
+let condPath    = null;
+let condCurrent = 0;
+let condPrev    = null;
+// condSpawned[pathKey][branchKey] = { afterBaseIndex, steps[], content[], chosen } | null
+const condSpawned = {};
 
-function renderCondStepper() {
-  const track   = document.getElementById('cond-stepper-track');
-  const content = document.getElementById('cond-step-content');
-  const pathTag = document.getElementById('cond-path-tag');
-  const pathLbl = document.getElementById('cond-path-label');
-  const banner  = document.getElementById('cond-branch-banner');
-  const nextBtn = document.getElementById('cond-next');
-  const backBtn = document.getElementById('cond-back');
+/* ─── Helper: merge baseSteps + active spawns ───────────────── */
+function getEffectiveSteps(pathKey) {
+  const path = COND_PATHS[pathKey];
+  const spawns = condSpawned[pathKey] || {};
+  const insertions = [];
+  for (const [, sp] of Object.entries(spawns)) {
+    if (sp) insertions.push({ abi: sp.afterBaseIndex, steps: sp.steps });
+  }
+  insertions.sort((a, b) => a.abi - b.abi);
+  const result = [];
+  path.baseSteps.forEach((lbl, bi) => {
+    result.push({ label: lbl, isSpawned: false });
+    insertions.filter(ins => ins.abi === bi).forEach(ins => {
+      ins.steps.forEach(sl => result.push({ label: sl, isSpawned: true }));
+    });
+  });
+  return result; // [{ label, isSpawned }]
+}
 
-  const pathData = condPath ? COND_PATHS[condPath] : null;
-  const steps    = pathData ? pathData.steps : ['Request Type'];
-  const total    = steps.length;
+/* ─── Helper: get content def for effective index ──────────── */
+function getEffectiveContent(pathKey, effIdx) {
+  const path = COND_PATHS[pathKey];
+  const spawns = condSpawned[pathKey] || {};
+  const insertions = [];
+  for (const [, sp] of Object.entries(spawns)) {
+    if (sp) insertions.push({ abi: sp.afterBaseIndex, content: sp.content });
+  }
+  insertions.sort((a, b) => a.abi - b.abi);
+  let idx = 0;
+  for (let bi = 0; bi < path.baseSteps.length; bi++) {
+    if (idx === effIdx) return { def: path.baseContent[bi], isSpawned: false };
+    idx++;
+    const insHere = insertions.filter(i => i.abi === bi);
+    for (const ins of insHere) {
+      for (const c of ins.content) {
+        if (idx === effIdx) return { def: c, isSpawned: true };
+        idx++;
+      }
+    }
+  }
+  return { def: null, isSpawned: false };
+}
 
-  // Stepper track
+/* ─── Apply a branch selection ─────────────────────────────── */
+function applyBranch(pathKey, branchKey, chosen) {
+  const branchDef = COND_PATHS[pathKey].branches[branchKey];
+  if (!condSpawned[pathKey]) condSpawned[pathKey] = {};
+  const spawnEntry = branchDef.map[chosen] || null;
+  condSpawned[pathKey][branchKey] = spawnEntry
+    ? { afterBaseIndex: branchDef.afterBaseIndex, steps: spawnEntry.steps, content: spawnEntry.content, chosen }
+    : null;
+  // Show spawn banner if steps were added
+  const banner = document.getElementById('cond-spawn-banner');
+  const bannerText = document.getElementById('cond-spawn-banner-text');
+  if (spawnEntry) {
+    bannerText.textContent = `⑂ "${chosen}" added ${spawnEntry.steps.length} step${spawnEntry.steps.length > 1 ? 's' : ''} to this flow.`;
+    banner.classList.remove('hidden');
+    setTimeout(() => banner.classList.add('hidden'), 4000);
+  } else {
+    banner.classList.add('hidden');
+  }
+  renderCondTrack(pathKey);
+  renderCondSpawnPill(pathKey);
+  renderBranchMap(pathKey);
+}
+
+/* ─── Render just the stepper track ────────────────────────── */
+function renderCondTrack(pathKey) {
+  const track = document.getElementById('cond-stepper-track');
+  if (!pathKey) {
+    track.innerHTML = `<div class="h-step is-current"><div class="h-step-inner"><div class="h-dot current"><span class="dot-normal"><span style="font-size:13px">1</span></span></div><span class="h-label" style="color:var(--gray-900);font-weight:700">Request Type</span></div></div>`;
+    return;
+  }
+  const steps = getEffectiveSteps(pathKey);
   track.innerHTML = '';
-  steps.forEach((name, i) => {
+  steps.forEach(({ label, isSpawned }, i) => {
     if (i > 0) {
       const line = document.createElement('div');
-      line.className = 'h-connector' + (i <= condCurrent ? ' complete' : '');
+      line.className = 'h-connector' + (i <= condCurrent ? ' complete' : '') + (isSpawned ? ' spawned' : '');
       track.appendChild(line);
     }
-    const step = document.createElement('div');
     const isComplete = i < condCurrent;
     const isCurrent  = i === condCurrent;
     const isFuture   = i > condCurrent;
@@ -2461,46 +2633,143 @@ function renderCondStepper() {
     if (isCurrent)  cls += ' is-current';
     if (isComplete) cls += ' is-complete';
     if (isFuture)   cls += ' is-future';
+    if (isSpawned)  cls += ' is-spawned';
+    const step = document.createElement('div');
     step.className = cls;
-    if (i !== 0) step.classList.add('cond-step-new');
     const dotState = isComplete ? 'complete' : isCurrent ? 'current' : 'incomplete';
-    const lColor   = isCurrent ? 'var(--gray-900)' : isComplete ? 'var(--gray-600)' : 'var(--gray-400)';
+    const dotCls   = dotState + (isSpawned ? ' spawned' : '');
+    const lColor   = isCurrent ? 'var(--gray-900)' : isComplete ? 'var(--gray-600)' : isSpawned ? '#4527A0' : 'var(--gray-400)';
     const lWeight  = isCurrent ? '700' : '400';
     step.innerHTML = `
       <div class="h-step-inner">
-        <div class="h-dot ${dotState}">
+        <div class="h-dot ${dotCls}">
           <span class="dot-normal">${isComplete ? svgCheck() : `<span style="font-size:13px">${i+1}</span>`}</span>
         </div>
-        <span class="h-label" style="color:${lColor};font-weight:${lWeight}">${name}</span>
+        <span class="h-label" style="color:${lColor};font-weight:${lWeight}">${label}</span>
       </div>`;
     track.appendChild(step);
   });
+}
+
+/* ─── Render spawn pill ─────────────────────────────────────── */
+function renderCondSpawnPill(pathKey) {
+  const pill = document.getElementById('cond-spawn-pill');
+  const pillText = document.getElementById('cond-spawn-pill-text');
+  if (!pathKey) { pill.classList.add('hidden'); return; }
+  const spawns = condSpawned[pathKey] || {};
+  const active = Object.values(spawns).filter(Boolean);
+  if (active.length === 0) { pill.classList.add('hidden'); return; }
+  const totalSpawned = active.reduce((sum, s) => sum + s.steps.length, 0);
+  pillText.textContent = `⑂ ${totalSpawned} internal step${totalSpawned > 1 ? 's' : ''} added to this flow`;
+  pill.classList.remove('hidden');
+}
+
+/* ─── Render dynamic branch map ─────────────────────────────── */
+function renderBranchMap(pathKey) {
+  const mapEl  = document.getElementById('cond-branch-map');
+  const mapTag = document.getElementById('cond-map-tag');
+  if (!pathKey) {
+    mapEl.innerHTML = '<p style="font-size:13px;color:var(--gray-400)">No path selected yet. Choose a request type in Step 1 to populate this map.</p>';
+    mapTag.textContent = 'Select a path to see internal branches';
+    return;
+  }
+  const path = COND_PATHS[pathKey];
+  const steps = getEffectiveSteps(pathKey);
+  const spawns = condSpawned[pathKey] || {};
+  mapTag.textContent = `${path.label} · ${steps.length} steps`;
+
+  // Step chips row
+  let chipsHtml = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:24px">';
+  steps.forEach(({ label, isSpawned }, i) => {
+    if (i > 0) chipsHtml += '<span style="color:var(--gray-400);font-size:11px">→</span>';
+    chipsHtml += `<span class="branch-map-step${isSpawned ? ' spawned' : ''}">${label}</span>`;
+  });
+  chipsHtml += '</div>';
+
+  // Branch conditions table
+  let branchRows = '';
+  for (const [bKey, branchDef] of Object.entries(path.branches || {})) {
+    const afterStep = path.baseSteps[branchDef.afterBaseIndex];
+    const sp = spawns[bKey];
+    branchRows += `
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+          ⑂ ${branchDef.triggerLabel}
+          <span style="font-weight:400;color:var(--gray-400)"> — triggered at ${afterStep}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#f7f7f7">
+              <th style="text-align:left;padding:6px 10px;border:1px solid #e5e5e5;color:var(--gray-600)">Selection</th>
+              <th style="text-align:left;padding:6px 10px;border:1px solid #e5e5e5;color:var(--gray-600)">Spawned steps</th>
+              <th style="text-align:center;padding:6px 10px;border:1px solid #e5e5e5;color:var(--gray-600)">Active</th>
+            </tr>
+          </thead>
+          <tbody>`;
+    for (const [opt, spawnEntry] of Object.entries(branchDef.map)) {
+      const isActive = sp && sp.chosen === opt;
+      branchRows += `
+            <tr style="background:${isActive ? '#EDE7FF' : 'white'}">
+              <td style="padding:6px 10px;border:1px solid #e5e5e5;color:${isActive ? '#4527A0' : 'var(--gray-700)'};font-weight:${isActive ? 600 : 400}">${opt}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e5e5">
+                ${spawnEntry.steps.map(s => `<span class="branch-map-step spawned" style="margin-right:4px">${s}</span>`).join('<span style="color:#B39DDB;font-size:11px">→</span>')}
+              </td>
+              <td style="padding:6px 10px;border:1px solid #e5e5e5;text-align:center">${isActive ? '✅' : '—'}</td>
+            </tr>`;
+    }
+    // No-spawn row
+    const noneActive = !sp;
+    branchRows += `
+            <tr style="background:${noneActive ? '#f7f7f7' : 'white'}">
+              <td style="padding:6px 10px;border:1px solid #e5e5e5;color:var(--gray-500);font-style:italic" colspan="2">Other — no additional steps</td>
+              <td style="padding:6px 10px;border:1px solid #e5e5e5;text-align:center">${noneActive ? '✅' : '—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+  }
+  mapEl.innerHTML = chipsHtml + branchRows;
+}
+
+/* ─── Full stepper render ───────────────────────────────────── */
+function renderCondStepper() {
+  const content = document.getElementById('cond-step-content');
+  const pathTag = document.getElementById('cond-path-tag');
+  const pathLbl = document.getElementById('cond-path-label');
+  const banner  = document.getElementById('cond-branch-banner');
+  const nextBtn = document.getElementById('cond-next');
+  const backBtn = document.getElementById('cond-back');
+
+  // Update track
+  renderCondTrack(condPath);
 
   // Path tag
-  if (pathData) {
-    pathLbl.textContent = pathData.label;
+  if (condPath) {
+    pathLbl.textContent = COND_PATHS[condPath].label;
     pathTag.classList.remove('hidden');
   } else {
     pathTag.classList.add('hidden');
   }
 
-  // Branch changed banner
+  // Branch-change banner (top-level path changed)
   if (condPrev && condPrev !== condPath) {
     banner.classList.remove('hidden');
     setTimeout(() => banner.classList.add('hidden'), 3500);
   }
   condPrev = condPath;
 
-  // Step content
-  const isLast = pathData && condCurrent === total - 1;
+  const effSteps = condPath ? getEffectiveSteps(condPath) : [{ label: 'Request Type', isSpawned: false }];
+  const total    = effSteps.length;
+  const isLast   = condPath && condCurrent === total - 1;
+
   backBtn.disabled = condCurrent === 0;
-  nextBtn.disabled = condCurrent === 0 && !condPath; // disabled on step 0 until a choice is made
+  nextBtn.disabled = condCurrent === 0 && !condPath;
   nextBtn.innerHTML = isLast
     ? `Submit <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polyline points="4,10 8.5,14.5 16,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
     : `Next <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+  /* ── Step 0: choice cards ── */
   if (condCurrent === 0) {
-    // Choice cards
     content.innerHTML = `
       <h4 style="font-size:14px;font-weight:700;color:var(--gray-900);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)">What do you need help with today?</h4>
       <div class="choice-grid">
@@ -2520,41 +2789,78 @@ function renderCondStepper() {
           <div class="choice-desc">Submit a claim for a death benefit, disability, or care event.</div>
         </div>
       </div>`;
-
-    // Wire choice card clicks
     content.querySelectorAll('.choice-card').forEach(card => {
       card.addEventListener('click', () => {
         const prev = condPath;
         condPath = card.dataset.choice;
-        condCurrent = 0; // stay on step 0
-        if (prev !== condPath) condPrev = prev;
+        if (prev !== condPath) {
+          condPrev = prev;
+          // Clear spawns from previous path
+          if (prev && condSpawned[prev]) {
+            Object.keys(condSpawned[prev]).forEach(k => { condSpawned[prev][k] = null; });
+          }
+        }
         renderCondStepper();
+        renderBranchMap(condPath);
       });
     });
-  } else {
-    // Form content for this path step
-    const stepDef = pathData.content[condCurrent];
-    if (!stepDef) { content.innerHTML = ''; return; }
-    let fieldsHtml = '';
-    (stepDef.fields || []).forEach(f => {
-      if (f.type === 'checkbox') {
-        fieldsHtml += `<div class="cond-field-row"><label style="display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--blue-primary)">${f.label}</label></div>`;
-      } else if (f.type === 'select') {
-        const opts = f.options.map(o => `<option>${o}</option>`).join('');
-        fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><select class="cond-field-select">${opts}</select></div>`;
-      } else if (f.type === 'info') {
-        fieldsHtml += `<div style="padding:10px 14px;background:#F0F5FF;border-radius:6px;font-size:13px;color:var(--gray-600);margin-bottom:8px">ℹ️ ${f.label}</div>`;
-      } else {
-        fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><input type="text" class="cond-field-input" placeholder="${f.placeholder || ''}"></div>`;
-      }
-    });
-    content.innerHTML = `<h4>${stepDef.title}</h4>${fieldsHtml}`;
+    renderCondSpawnPill(condPath);
+    renderBranchMap(condPath);
+    document.getElementById('cond-inline-msg').style.display = 'none';
+    return;
   }
 
-  // Inline message
+  /* ── Steps 1+: form content ── */
+  const { def: stepDef, isSpawned } = getEffectiveContent(condPath, condCurrent);
+  if (!stepDef) { content.innerHTML = ''; return; }
+
+  // Retrieve saved branch-select values for this path
+  const savedSelects = (condSpawned[condPath] && Object.values(condSpawned[condPath])) || [];
+
+  let fieldsHtml = '';
+  (stepDef.fields || []).forEach(f => {
+    if (f.type === 'checkbox') {
+      fieldsHtml += `<div class="cond-field-row"><label style="display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--blue-primary)">${f.label}</label></div>`;
+    } else if (f.type === 'branch-select') {
+      // Find currently chosen value for this branch
+      const sp = (condSpawned[condPath] || {})[f.branchKey];
+      const chosenVal = sp ? sp.chosen : null;
+      const opts = f.options.map(o => `<option${o === chosenVal ? ' selected' : ''}>${o}</option>`).join('');
+      const badgeHtml = `<span class="branch-trigger-tag">⑂ condition</span>`;
+      fieldsHtml += `
+        <div class="cond-field-row" style="border-left:3px solid #B39DDB;padding-left:10px;background:#FAF7FF;border-radius:0 6px 6px 0">
+          <span class="cond-field-label">${f.label}${badgeHtml}</span>
+          <select class="cond-field-select" data-branch-key="${f.branchKey}" style="border-color:#B39DDB">${opts}</select>
+          <div style="font-size:11px;color:#7B52C8;margin-top:4px">${f.hint || ''}</div>
+        </div>`;
+    } else if (f.type === 'select') {
+      const opts = f.options.map(o => `<option>${o}</option>`).join('');
+      fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><select class="cond-field-select">${opts}</select></div>`;
+    } else if (f.type === 'info') {
+      fieldsHtml += `<div style="padding:10px 14px;background:#F0F5FF;border-radius:6px;font-size:13px;color:var(--gray-600);margin-bottom:8px">ℹ️ ${f.label}</div>`;
+    } else {
+      fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><input type="text" class="cond-field-input" placeholder="${f.placeholder || ''}"></div>`;
+    }
+  });
+
+  const spawnBadge = isSpawned ? `<span class="branch-trigger-tag" style="margin-left:8px;font-size:10px;background:#EDE7FF;border-color:#B39DDB;color:#4527A0">⑂ sub-path step</span>` : '';
+  content.innerHTML = `<h4 style="${isSpawned ? 'color:#4527A0' : ''}">${stepDef.title}${spawnBadge}</h4>${fieldsHtml}`;
+
+  // Wire branch-select changes
+  content.querySelectorAll('select[data-branch-key]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const val = sel.value;
+      const bKey = sel.dataset.branchKey;
+      applyBranch(condPath, bKey, val);
+    });
+  });
+
+  renderCondSpawnPill(condPath);
+  renderBranchMap(condPath);
   document.getElementById('cond-inline-msg').style.display = 'none';
 }
 
+/* ─── Nav buttons ───────────────────────────────────────────── */
 document.getElementById('cond-next').addEventListener('click', () => {
   if (!condPath) {
     const msg = document.getElementById('cond-inline-msg');
@@ -2562,7 +2868,7 @@ document.getElementById('cond-next').addEventListener('click', () => {
     msg.textContent = 'Please select a request type before continuing.';
     return;
   }
-  const total = COND_PATHS[condPath].steps.length;
+  const total = getEffectiveSteps(condPath).length;
   if (condCurrent === total - 1) {
     const msg = document.getElementById('cond-inline-msg');
     msg.style.cssText = 'display:block;background:#E8F5E9;border:1.5px solid #4CAF50;color:#1B5E20';
