@@ -1284,28 +1284,215 @@
     <div class="section-card" style="margin-top:32px">
       <div class="section-header">
         <h2>Color Tokens</h2>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--gray-600)">Values verified against Figma Sequoia Library · <em>🌈 Other/Core Blue</em> &amp; <em>global/text</em> tokens</p>
       </div>
       <div class="section-body">
-        <div style="display:flex;flex-direction:column;gap:12px;max-width:420px">
-          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
-            <div style="width:32px;height:32px;border-radius:6px;background:#0057FF;flex-shrink:0"></div>
-            <div><strong>--blue-primary</strong> · #0057FF<br><span style="color:var(--gray-400);font-size:11px">Current dot fill / Complete dot fill / Complete line</span></div>
+
+        <!-- ── Palette grid ─────────────────────────────── -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px">
+
+          <!-- Core Blue -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#0061F4;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:22px;color:white;font-weight:700;letter-spacing:.5px">#0061F4</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:#0061F4;margin-bottom:2px">🌈 Other / Core Blue</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--blue-primary</div>
+              <div style="font-size:11px;color:var(--gray-600)">Current &amp; complete dot · complete connector</div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
-            <div style="width:32px;height:32px;border-radius:6px;background:#E0E0E0;flex-shrink:0"></div>
-            <div><strong>--gray-200</strong> · #E0E0E0<br><span style="color:var(--gray-400);font-size:11px">Incomplete dot border / Incomplete line</span></div>
+
+          <!-- Dark Brown / text_on_light -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#281805;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:22px;color:white;font-weight:700;letter-spacing:.5px">#281805</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:#281805;margin-bottom:2px">global / text / text_on_light</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--gray-900</div>
+              <div style="font-size:11px;color:var(--gray-600)">Current step label · primary text</div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
-            <div style="width:32px;height:32px;border-radius:6px;background:#9E9E9E;flex-shrink:0"></div>
-            <div><strong>--gray-400</strong> · #9E9E9E<br><span style="color:var(--gray-400);font-size:11px">Incomplete label / Incomplete numeral</span></div>
+
+          <!-- White / text_on_dark -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#ffffff;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--gray-200)">
+              <span style="font-size:22px;color:#281805;font-weight:700;letter-spacing:.5px">#FFFFFF</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:2px">global / text / text_on_dark</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--white</div>
+              <div style="font-size:11px;color:var(--gray-600)">Numeral inside blue dot · surface</div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;font-size:13px">
-            <div style="width:32px;height:32px;border-radius:6px;background:#212121;flex-shrink:0"></div>
-            <div><strong>--gray-900</strong> · #212121<br><span style="color:var(--gray-400);font-size:11px">Current step label (bold)</span></div>
+
+          <!-- Neutral 150 / incomplete connector -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#E0E0E0;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:22px;color:#281805;font-weight:700;letter-spacing:.5px">#E0E0E0</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:#6b6b6b;margin-bottom:2px">color / 🌈-neutral / neutral-150</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--gray-200</div>
+              <div style="font-size:11px;color:var(--gray-600)">Incomplete connector · incomplete dot border</div>
+            </div>
           </div>
-        </div>
+
+          <!-- Gray 400 / inactive label -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#ABABAB;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:22px;color:white;font-weight:700;letter-spacing:.5px">#ABABAB</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:#6b6b6b;margin-bottom:2px">Sequoia / neutral-300</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--gray-400</div>
+              <div style="font-size:11px;color:var(--gray-600)">Incomplete label · placeholder / inactive text</div>
+            </div>
+          </div>
+
+          <!-- Gray 600 / complete label -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#6B6B6B;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:22px;color:white;font-weight:700;letter-spacing:.5px">#6B6B6B</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:#6b6b6b;margin-bottom:2px">Sequoia / neutral-500</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--gray-600</div>
+              <div style="font-size:11px;color:var(--gray-600)">Complete step label · secondary text</div>
+            </div>
+          </div>
+
+          <!-- Gray 100 / surface -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+            <div style="height:80px;background:#F2F2F2;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--gray-200)">
+              <span style="font-size:22px;color:#281805;font-weight:700;letter-spacing:.5px">#F2F2F2</span>
+            </div>
+            <div style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:2px">Sequoia / neutral-50</div>
+              <div style="font-size:12px;color:var(--gray-900);font-family:monospace;margin-bottom:4px">--gray-100</div>
+              <div style="font-size:11px;color:var(--gray-600)">Page background · section surfaces</div>
+            </div>
+          </div>
+
+        </div><!-- /palette grid -->
+
+        <!-- ── State color map ──────────────────────────── -->
+        <h3 style="font-size:14px;font-weight:600;color:var(--gray-900);margin:0 0 12px">Color by Stepper State</h3>
+        <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;font-size:13px">
+
+          <!-- header row -->
+          <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;background:var(--gray-100);padding:8px 14px;font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gray-200)">
+            <span>State</span><span>Dot</span><span>Connector</span><span>Label</span>
+          </div>
+
+          <!-- Current -->
+          <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 14px;border-bottom:1px solid var(--gray-200);gap:8px">
+            <span style="font-weight:600;color:var(--gray-900)">Current</span>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:20px;height:20px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="color:white;font-size:9px;font-weight:700">1</span>
+              </div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#0061F4</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:28px;height:4px;background:#E0E0E0;border-radius:2px;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#E0E0E0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:12px;height:12px;border-radius:2px;background:#281805;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#281805 bold</span>
+            </div>
+          </div>
+
+          <!-- Complete -->
+          <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 14px;border-bottom:1px solid var(--gray-200);gap:8px">
+            <span style="font-weight:600;color:var(--gray-900)">Complete</span>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:20px;height:20px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg viewBox="0 0 16 16" style="width:11px;height:11px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>
+              </div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#0061F4</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:28px;height:4px;background:#0061F4;border-radius:2px;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#0061F4</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:12px;height:12px;border-radius:2px;background:#6B6B6B;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#6B6B6B</span>
+            </div>
+          </div>
+
+          <!-- Incomplete -->
+          <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 14px;border-bottom:1px solid var(--gray-200);gap:8px">
+            <span style="font-weight:600;color:var(--gray-900)">Incomplete</span>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:20px;height:20px;border-radius:50%;background:white;border:2px solid #E0E0E0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="color:#ABABAB;font-size:9px;font-weight:600">3</span>
+              </div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">bg:#FFF · #E0E0E0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:28px;height:4px;background:#E0E0E0;border-radius:2px;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#E0E0E0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:12px;height:12px;border-radius:2px;background:#ABABAB;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#ABABAB</span>
+            </div>
+          </div>
+
+          <!-- Partly Complete -->
+          <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;padding:10px 14px;gap:8px">
+            <span style="font-weight:600;color:var(--gray-900)">Partly Complete</span>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:20px;height:20px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg viewBox="0 0 16 16" style="width:11px;height:11px"><line x1="3" y1="8" x2="13" y2="8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#0061F4</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:14px;height:4px;background:#0061F4;border-radius:2px 0 0 2px;flex-shrink:0"></div>
+              <div style="width:14px;height:4px;background:#E0E0E0;border-radius:0 2px 2px 0;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">split</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div style="width:12px;height:12px;border-radius:2px;background:#281805;flex-shrink:0"></div>
+              <span style="font-family:monospace;font-size:11px;color:var(--gray-600)">#281805 bold</span>
+            </div>
+          </div>
+
+        </div><!-- /state color map -->
+
+        <!-- ── CSS var reference ────────────────────────── -->
+        <details style="margin-top:20px;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden">
+          <summary style="padding:10px 14px;font-size:13px;font-weight:600;color:var(--gray-900);cursor:pointer;background:var(--gray-100);list-style:none;display:flex;align-items:center;gap:6px">
+            <span>▶</span> CSS Variable Definitions
+          </summary>
+          <pre style="margin:0;padding:14px;font-size:12px;line-height:1.7;color:var(--gray-600);background:white;overflow-x:auto">:root {
+  /* Brand */
+  --blue-primary: #0061f4;   /* 🌈 Other/Core Blue */
+
+  /* Text */
+  --gray-900:     #281805;   /* global/text/text_on_light */
+  --gray-600:     #6b6b6b;
+  --gray-400:     #ababab;
+  --white:        #ffffff;   /* global/text/text_on_dark */
+
+  /* Surfaces &amp; Connectors */
+  --gray-200:     #e0e0e0;   /* color/🌈-neutral/neutral-150 */
+  --gray-100:     #f2f2f2;
+
+  /* Geometry */
+  --dot-size:        32px;
+  --dot-size-sm:     24px;
+  --line-thickness:   4px;
+}</pre>
+        </details>
+
       </div>
-    </div>
+    </div><!-- /Color Tokens -->
 
   </div><!-- /tab-states -->
 
