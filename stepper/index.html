@@ -10,6 +10,7 @@
 
     :root {
       --blue-primary: #0061f4;
+      --step-accent:  var(--blue-primary); /* swapped by .theme-black */
       --white: #ffffff;
       --gray-100: #f2f2f2;
       --gray-200: #e0e0e0;
@@ -209,7 +210,7 @@
       margin-top: calc(var(--dot-size) / 2 - var(--line-thickness) / 2);
       transition: background .3s;
     }
-    .h-connector.complete { background: var(--blue-primary); }
+    .h-connector.complete { background: var(--step-accent); }
 
     /* Dot */
     .h-dot {
@@ -233,17 +234,17 @@
       color: #281805;
     }
 
-    /* Current - solid blue fill, white step number */
+    /* Current - solid accent fill, white step number */
     .h-dot.current {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: white;
     }
 
-    /* Complete - blue fill, white checkmark */
+    /* Complete - accent fill, white checkmark */
     .h-dot.complete {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: var(--white);
     }
 
@@ -273,10 +274,10 @@
       fill: none;
     }
 
-    /* Partly complete - blue fill with white dash */
+    /* Partly complete - accent fill with white dash */
     .h-dot.partly-complete {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: white;
     }
     .h-step.is-partly-complete .h-label { color: #281805; }
@@ -581,18 +582,18 @@
       color: #281805;
     }
     .v-dot.current {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: white;
     }
     .v-dot.complete {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: var(--white);
     }
     .v-dot.partly-complete {
-      background: var(--blue-primary);
-      border: 4px solid var(--blue-primary);
+      background: var(--step-accent);
+      border: 4px solid var(--step-accent);
       color: white;
       font-weight: 700;
     }
@@ -618,7 +619,7 @@
       border-radius: 2px;
       transition: background .3s;
     }
-    .v-line.complete { background: var(--blue-primary); }
+    .v-line.complete { background: var(--step-accent); }
 
     /* step body (title + description) */
     .v-step-body {
@@ -914,6 +915,64 @@
       animation: slideIn .3s ease;
     }
     .branch-changed-banner.hidden { display: none; }
+
+    /* ══════════════════════════════════════════════
+       BLACK THEME
+    ══════════════════════════════════════════════ */
+    body.theme-black {
+      --step-accent: #281805; /* color/🌈-neutral/warm-black-850 */
+    }
+
+    /* Current dot in Black theme: white bg + dark ring + center dot (no solid fill) */
+    body.theme-black .h-dot.current,
+    body.theme-black .v-dot.current {
+      background: white;
+      border: 2.5px solid #281805;
+    }
+    body.theme-black .h-dot.current::after,
+    body.theme-black .v-dot.current::after {
+      content: '';
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #281805;
+      pointer-events: none;
+    }
+    /* Hide numeral in Current black (center dot replaces it) */
+    body.theme-black .h-dot.current .dot-normal span,
+    body.theme-black .v-dot.current .dot-normal span { visibility: hidden; }
+
+    /* In Black theme, complete label is the same dark color as current (not gray-600) */
+    body.theme-black .h-step.is-complete .h-label { color: var(--gray-900) !important; }
+    body.theme-black .v-step.is-complete .v-step-title { color: var(--gray-900) !important; }
+
+    /* ══════════════════════════════════════════════
+       THEME TOGGLE PILL
+    ══════════════════════════════════════════════ */
+    .theme-toggle {
+      display: flex;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .theme-toggle-btn {
+      padding: 5px 14px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-600);
+      transition: all .15s;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .theme-toggle-btn.active {
+      background: var(--gray-900);
+      color: white;
+      font-weight: 600;
+    }
+    .theme-toggle-btn:hover:not(.active) { background: var(--gray-100); }
   </style>
 </head>
 <body>
@@ -921,7 +980,14 @@
 <!-- ─────────────────────── Page Header ─────────────────────── -->
 <header class="page-header">
   <h1>Sequoia Design System &nbsp;·&nbsp; Stepper Component</h1>
-  <span class="badge">Stakeholder Review Prototype</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:12px;color:var(--gray-600);font-weight:500">Style:</span>
+    <div class="theme-toggle" id="theme-toggle">
+      <button class="theme-toggle-btn active" data-theme="rebrand">Rebrand</button>
+      <button class="theme-toggle-btn" data-theme="black">Black</button>
+    </div>
+    <span class="badge">Stakeholder Review</span>
+  </div>
 </header>
 
 <div class="page-body">
@@ -945,7 +1011,7 @@
     <div class="section-card">
       <div class="section-header">
         <h2>Interactive Demo</h2>
-        <span class="variant-tag">Rebrand · Desktop</span>
+        <span class="variant-tag theme-variant-tag">Rebrand · Core Blue</span>
       </div>
       <div class="section-body">
 
@@ -1494,6 +1560,118 @@
       </div>
     </div><!-- /Color Tokens -->
 
+    <!-- ══════════════════════════════════════════════
+         BLACK STYLE REFERENCE
+    ══════════════════════════════════════════════ -->
+    <div class="section-card" style="margin-top:32px">
+      <div class="section-header">
+        <h2>Black Style Reference</h2>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--gray-600)">Figma token: <code>color / 🌈-neutral / warm-black-850</code> &nbsp;·&nbsp; hex <strong>#281805</strong></p>
+      </div>
+      <div class="section-body">
+
+        <!-- Side-by-side style comparison -->
+        <h3 style="font-size:14px;font-weight:600;color:var(--gray-900);margin:0 0 14px">Rebrand vs Black — dot states at a glance</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px">
+
+          <!-- Rebrand column -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden">
+            <div style="padding:10px 14px;background:#EBF2FF;border-bottom:1px solid #C5D8FF;font-size:12px;font-weight:600;color:#0061F4">Rebrand style · Core Blue #0061F4</div>
+            <div style="padding:16px 14px;display:flex;flex-direction:column;gap:14px">
+              <!-- Current -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <span style="color:white;font-size:13px;font-weight:700">2</span>
+                </div>
+                <div><strong>Current</strong> — solid blue, white numeral</div>
+              </div>
+              <!-- Complete -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>
+                </div>
+                <div><strong>Complete</strong> — solid blue, white ✓</div>
+              </div>
+              <!-- Partly -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#0061F4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 16 16" style="width:14px;height:14px"><line x1="3" y1="8" x2="13" y2="8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </div>
+                <div><strong>Partly complete</strong> — solid blue, white dash</div>
+              </div>
+              <!-- Incomplete -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:white;border:2px solid #E0E0E0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <span style="color:#ABABAB;font-size:13px;font-weight:600">4</span>
+                </div>
+                <div><strong>Incomplete</strong> — outlined gray, gray numeral</div>
+              </div>
+              <!-- Connector -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+                  <div style="width:20px;height:4px;background:#0061F4;border-radius:2px 0 0 2px"></div>
+                  <div style="width:20px;height:4px;background:#E0E0E0;border-radius:0 2px 2px 0"></div>
+                </div>
+                <div><strong>Connector</strong> — blue (done) / gray (ahead)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Black column -->
+          <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden">
+            <div style="padding:10px 14px;background:#f5f0eb;border-bottom:1px solid #c8b89a;font-size:12px;font-weight:600;color:#281805">Black style · warm-black-850 #281805</div>
+            <div style="padding:16px 14px;display:flex;flex-direction:column;gap:14px">
+              <!-- Current black -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:white;border:2.5px solid #281805;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#281805"></div>
+                </div>
+                <div><strong>Current</strong> — outlined ring + center dot, no numeral</div>
+              </div>
+              <!-- Complete black -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#281805;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none"><polyline points="3,8 6.5,11.5 13,5"/></svg>
+                </div>
+                <div><strong>Complete</strong> — solid dark, white ✓</div>
+              </div>
+              <!-- Partly black -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#281805;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 16 16" style="width:14px;height:14px"><line x1="3" y1="8" x2="13" y2="8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </div>
+                <div><strong>Partly complete</strong> — solid dark, white dash</div>
+              </div>
+              <!-- Incomplete black -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:white;border:2px solid #E0E0E0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <span style="color:#ABABAB;font-size:13px;font-weight:600">4</span>
+                </div>
+                <div><strong>Incomplete</strong> — same as Rebrand (outlined gray)</div>
+              </div>
+              <!-- Connector black -->
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+                  <div style="width:20px;height:4px;background:#281805;border-radius:2px 0 0 2px"></div>
+                  <div style="width:20px;height:4px;background:#E0E0E0;border-radius:0 2px 2px 0"></div>
+                </div>
+                <div><strong>Connector</strong> — dark (done) / gray (ahead)</div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /side-by-side -->
+
+        <!-- Key diff callout -->
+        <div style="background:#f5f0eb;border:1px solid #c8b89a;border-radius:8px;padding:14px 16px;font-size:13px;color:#281805">
+          <strong>Key Figma token difference:</strong> The Black theme replaces <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">--blue-primary (#0061F4)</code>
+          with <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">warm-black-850 (#281805)</code> for all active/complete dot fills and connector lines.
+          The Current dot also switches from a <em>solid fill</em> to an <em>outlined ring + center dot</em> pattern.
+          Label colors remain <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">#281805</code> in both styles.
+        </div>
+
+      </div>
+    </div><!-- /Black Style Reference -->
+
   </div><!-- /tab-states -->
 
 </div><!-- /page-body -->
@@ -2026,6 +2204,27 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   THEME TOGGLE  (Rebrand ↔ Black)
+══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.theme-toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isBlack = btn.dataset.theme === 'black';
+    document.body.classList.toggle('theme-black', isBlack);
+    /* Update variant-tag labels */
+    document.querySelectorAll('.theme-variant-tag').forEach(el => {
+      el.textContent = isBlack ? 'Black · warm-black-850' : 'Rebrand · Core Blue';
+    });
+    /* Re-render all steppers so dot colors update */
+    renderHStepper();
+    buildVariants();
+    renderVStepper();
+    buildV3();
   });
 });
 
