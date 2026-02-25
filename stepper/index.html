@@ -1882,6 +1882,9 @@ function buildHStepper(container, total, current, smallDot = false, partlySet = 
     if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
     if (isFuture)         cls += ' is-future';
     step.className = cls;
+    if (isCurrent) {
+      step.setAttribute('aria-current', 'step');
+    }
     if (isFuture) {
       step.setAttribute('aria-disabled', 'true');
       step.setAttribute('tabindex', '-1');
@@ -2083,6 +2086,8 @@ function buildVStepper(container, steps, current, interactive = false, partlySet
     if (isPartlyComplete) cls += ' is-partly-complete is-hoverable';
     if (isFuture)         cls += ' is-future';
     stepEl.className = cls;
+    if (isCurrent) stepEl.setAttribute('aria-current', 'step');
+    if (isFuture)  { stepEl.setAttribute('aria-disabled', 'true'); stepEl.setAttribute('tabindex', '-1'); }
 
     const lineHtml = i < steps.length - 1
       ? `<div class="v-line${(isComplete || isPartlyComplete) ? ' complete' : ''}"></div>`
@@ -2284,31 +2289,48 @@ function hideInlineError(which) {
   if (el) el.style.display = 'none';
 }
 
-/* Final submission eligibility check */
+/* Final submission eligibility check (§9.1)
+   Blocks if any prior step is Incomplete OR Partly completed.
+   Prioritizes Incomplete over Partly completed for the CTA target (§9.2B). */
 function handleSubmit(which) {
-  const partlySet = which === 'h' ? hPartlyComplete : vPartlyComplete;
-  const total     = which === 'h' ? hTotal : V_STEPS.length;
-  if (partlySet.size > 0) {
-    // Find earliest partly-complete step
-    let firstPartly = -1;
-    for (let i = 0; i < total; i++) {
-      if (partlySet.has(i)) { firstPartly = i; break; }
-    }
-    const count = partlySet.size;
-    const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  const completedSet = which === 'h' ? hCompleted : vCompleted;
+  const partlySet    = which === 'h' ? hPartlyComplete : vPartlyComplete;
+  const total        = which === 'h' ? hTotal : V_STEPS.length;
+  const el           = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+
+  // Collect all prior steps (0..total-2) that are not Completed
+  const unfinished = [];
+  for (let i = 0; i < total - 1; i++) {
+    if (!completedSet.has(i)) unfinished.push(i);
+  }
+
+  if (unfinished.length > 0) {
+    // Prioritize true-Incomplete (never started) over Partly completed for CTA
+    const firstIncomplete = unfinished.find(i => !partlySet.has(i));
+    const ctaStep = firstIncomplete !== undefined ? firstIncomplete : unfinished[0];
+    const incCount   = unfinished.filter(i => !partlySet.has(i)).length;
+    const partCount  = unfinished.filter(i =>  partlySet.has(i)).length;
+    let detail = '';
+    if (incCount > 0 && partCount > 0)
+      detail = ` (${incCount} not started, ${partCount} partly completed)`;
+    else if (partCount > 0)
+      detail = partCount === 1 ? ' (partly completed)' : ` (${partCount} partly completed)`;
+    else
+      detail = incCount === 1 ? ' (not yet started)' : ` (${incCount} not yet started)`;
     if (el) {
       el.style.background = '#FFF3F3';
       el.style.border = '1.5px solid #F44336';
       el.style.color = '#B71C1C';
-      el.innerHTML = `<strong>Submission blocked.</strong> You have ${count} incomplete step${count > 1 ? 's' : ''}. ` +
-        `<a href="#" class="go-to-incomplete" data-which="${which}" data-step="${firstPartly}" ` +
-        `style="color:#0057FF;text-decoration:underline;cursor:pointer">Go to first incomplete step →</a>`;
+      el.innerHTML =
+        `<strong>Submission blocked.</strong> You have ${unfinished.length} unfinished step${unfinished.length > 1 ? 's' : ''}${detail}. ` +
+        `<a href="#" class="go-to-incomplete" data-which="${which}" data-step="${ctaStep}" ` +
+        `style="color:#0057FF;text-decoration:underline;cursor:pointer">Go to first unfinished step →</a>`;
       el.style.display = 'block';
     }
     return;
   }
-  // All complete — success
-  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+
+  // All prior steps Completed — success
   if (el) {
     el.style.background = '#E8F5E9';
     el.style.border = '1.5px solid #4CAF50';
