@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequoia Button — Stakeholder Review</title>
+  <style>
+    /* ── Design Tokens (from Figma via sync-tokens) ─────────────────────────── */
+    :root {
+      /* Sequoia button semantic tokens — sourced from Figma anatomy specs */
+      --btn-fill-bg:        #281805;   /* Warm Black 850 — Fill bg & Outline border  */
+      --btn-fill-label:     #ffffff;   /* White — label on Fill variant              */
+      --btn-outline-label:  #281805;   /* Warm Black — label on Outline variant      */
+      --btn-focus-ring:     #0061f4;   /* Core Blue — outer focus stroke             */
+      --btn-focus-surface:  #E0ECFE;   /* Focus surface — bg on focus state          */
+      --btn-inactive-fill:  #ABABAB;   /* Neutral 350 — inactive state               */
+
+      /* Structural */
+      --btn-radius:    24px;
+      --btn-pad-v:     12px;
+      --btn-pad-h:     24px;
+      --btn-gap:       8px;
+      --btn-font-size: 16px;
+      --btn-font-weight: 400;          /* Forever Forma Body Reg — Regular weight    */
+      --btn-line-height: 1.5;
+
+      /* Page */
+      --page-bg:   #F5F5F5;
+      --text-main: #281805;
+      --text-sub:  #6b6b6b;
+      --divider:   #e0e0e0;
+    }
+
+    /* ── Reset ───────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--page-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 48px 24px;
+    }
+
+    /* ── Page layout ─────────────────────────────────────────────────────────── */
+    .page-header {
+      max-width: 960px;
+      margin: 0 auto 48px;
+    }
+    .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .page-header p  { color: var(--text-sub); font-size: 15px; }
+    .page-header .meta {
+      display: flex; gap: 16px; margin-top: 12px;
+      font-size: 13px; color: var(--text-sub);
+    }
+    .page-header .meta span { display: flex; align-items: center; gap: 4px; }
+    .page-header .meta strong { color: var(--text-main); }
+
+    .section {
+      max-width: 960px;
+      margin: 0 auto 56px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    /* State rows */
+    .state-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--divider);
+      overflow: hidden;
+    }
+    .state-grid-header, .state-row {
+      display: contents;
+    }
+    .state-grid-header > div {
+      padding: 10px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-sub);
+      background: #fafafa;
+      border-bottom: 1px solid var(--divider);
+    }
+    .state-cell {
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .state-cell:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+    .state-label-cell {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+      border-bottom: 1px solid #f0f0f0;
+      border-right: 1px solid #f0f0f0;
+    }
+    .state-label-cell:last-of-type { border-bottom: none; }
+
+    /* ── Button Base ─────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--btn-gap);
+      padding: var(--btn-pad-v) var(--btn-pad-h);
+      border-radius: var(--btn-radius);
+      font-size: var(--btn-font-size);
+      font-weight: var(--btn-font-weight);
+      line-height: var(--btn-line-height);
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      border: 2px solid transparent;
+      position: relative;
+      transition: background 90ms ease, color 90ms ease, border-color 90ms ease, box-shadow 90ms ease;
+    }
+    /* Icons inherit button text color so focus/inactive states auto-adjust */
+    .btn svg * { stroke: currentColor; }
+    .btn:focus { outline: none; }
+    /* Focus-visible: fill = #E0ECFE bg + white border + blue outer ring */
+    .btn:focus-visible {
+      background: var(--btn-focus-surface);
+      color: var(--btn-fill-bg);
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--btn-focus-ring);
+      outline: none;
+    }
+
+    /* ── Fill variant ────────────────────────────────────────────────────────── */
+    .btn-fill {
+      background: var(--btn-fill-bg);
+      color: var(--btn-fill-label);
+      border-color: transparent;
+    }
+    /* Hover: same bg, white underline appears (handled by ::after below) */
+    .btn-fill:hover { background: var(--btn-fill-bg); }
+    /* Pressed: Warm Black @ 60% alpha */
+    .btn-fill:active { background: rgba(40, 24, 5, 0.6); }
+    /* Focus: light blue surface + dark text + white inner border + blue outer ring */
+    .btn-fill:focus-visible {
+      background: var(--btn-focus-surface);
+      color: var(--btn-fill-bg);
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--btn-focus-ring);
+    }
+    /* Inactive: flat Neutral 350 — NOT opacity on Warm Black */
+    .btn-fill:disabled, .btn-fill.inactive {
+      background: var(--btn-inactive-fill);
+      color: #ffffff;
+      opacity: 1;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ── Outline variant ─────────────────────────────────────────────────────── */
+    .btn-outline {
+      background: transparent;
+      color: var(--btn-outline-label);
+      border-color: var(--btn-fill-bg);
+    }
+    /* Hover: no bg change, dark underline appears via ::after */
+    .btn-outline:hover { background: transparent; }
+    /* Pressed: border + text go to 60% alpha */
+    .btn-outline:active {
+      border-color: rgba(40, 24, 5, 0.6);
+      color: rgba(40, 24, 5, 0.6);
+      background: transparent;
+    }
+    /* Focus: same pattern as Fill focus */
+    .btn-outline:focus-visible {
+      background: var(--btn-focus-surface);
+      color: var(--btn-fill-bg);
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--btn-focus-ring);
+    }
+    /* Inactive: border + text go to Neutral 350 */
+    .btn-outline:disabled, .btn-outline.inactive {
+      border-color: var(--btn-inactive-fill);
+      color: var(--btn-inactive-fill);
+      opacity: 1;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Underline — 2px underline appears on hover (white for Fill, dark for Outline)
+       Uses currentColor so it auto-matches the variant's text color            */
+    .btn .btn-label {
+      position: relative;
+      display: inline-block;
+    }
+    .btn .btn-label::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: currentColor;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 90ms ease;
+    }
+    .btn:hover .btn-label::after { transform: scaleX(1); }
+
+    /* Icon placeholder (circle with + to represent action icon) */
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .85;
+    }
+    .btn-icon svg { display: block; }
+
+    /* ── Static state demos (non-interactive, frozen for stakeholder review) ──── */
+
+    /* Fill — Hover: same bg, white underline */
+    .btn-fill.btn-state-hover { background: var(--btn-fill-bg); }
+
+    /* Fill — Pressed: Warm Black 60% alpha */
+    .btn-fill.btn-state-pressed { background: rgba(40, 24, 5, 0.6) !important; }
+
+    /* Fill — Focus: light blue surface + dark label + white border + blue ring */
+    .btn-fill.btn-state-focus-ring {
+      background: var(--btn-focus-surface) !important;
+      color: var(--btn-fill-bg) !important;
+      border-color: #ffffff !important;
+      box-shadow: 0 0 0 2px var(--btn-focus-ring) !important;
+    }
+
+    /* Fill — Inactive: flat Neutral 350, no opacity trick */
+    .btn-fill.btn-state-inactive {
+      background: var(--btn-inactive-fill) !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+      pointer-events: none;
+    }
+
+    /* Outline — Hover: no bg change, dark underline */
+    .btn-outline.btn-state-hover { background: transparent; }
+
+    /* Outline — Pressed: border + text at 60% alpha */
+    .btn-outline.btn-state-pressed {
+      border-color: rgba(40, 24, 5, 0.6) !important;
+      color: rgba(40, 24, 5, 0.6) !important;
+      background: transparent !important;
+    }
+
+    /* Outline — Focus: same pattern as Fill focus */
+    .btn-outline.btn-state-focus-ring {
+      background: var(--btn-focus-surface) !important;
+      color: var(--btn-fill-bg) !important;
+      border-color: #ffffff !important;
+      box-shadow: 0 0 0 2px var(--btn-focus-ring) !important;
+    }
+
+    /* Outline — Inactive: border + text go to Neutral 350 */
+    .btn-outline.btn-state-inactive {
+      border-color: var(--btn-inactive-fill) !important;
+      color: var(--btn-inactive-fill) !important;
+      opacity: 1 !important;
+      pointer-events: none;
+    }
+
+    /* Underline visible in hover and pressed demo rows */
+    .btn-state-hover .btn-label::after,
+    .btn-state-pressed .btn-label::after { transform: scaleX(1); }
+
+    /* ── Sandbox section ─────────────────────────────────────────────────────── */
+    .sandbox {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--divider);
+      padding: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    /* ── Token table ─────────────────────────────────────────────────────────── */
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--divider);
+      overflow: hidden;
+      font-size: 13px;
+    }
+    .token-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-sub);
+      background: #fafafa;
+      border-bottom: 1px solid var(--divider);
+    }
+    .token-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f5f5f5;
+      vertical-align: middle;
+    }
+    .token-table tr:last-child td { border-bottom: none; }
+    .token-table code {
+      font-family: 'SF Mono', 'Fira Mono', monospace;
+      font-size: 12px;
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .swatch {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,.08);
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <header class="page-header">
+    <h1>Sequoia Button — Stakeholder Review</h1>
+    <p>All interactive states and variants. Tokens sourced from Figma via REST API.</p>
+    <div class="meta">
+      <span><strong>Variants:</strong> Fill, Outline</span>
+      <span><strong>States:</strong> Default · Hover · Pressed · Focus · Inactive</span>
+      <span><strong>Source:</strong> Sequoia Library · Governance: Styling frame</span>
+    </div>
+  </header>
+
+  <!-- ── Fill variant ─────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Fill Variant — All States</div>
+    <div class="state-grid">
+      <div class="state-grid-header">
+        <div>State</div>
+        <div>Button</div>
+      </div>
+
+      <!-- Default -->
+      <div class="state-label-cell">Default</div>
+      <div class="state-cell">
+        <button class="btn btn-fill">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <!-- Hover -->
+      <div class="state-label-cell">Hover</div>
+      <div class="state-cell">
+        <button class="btn btn-fill btn-state-hover">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <!-- Pressed -->
+      <div class="state-label-cell">Pressed</div>
+      <div class="state-cell">
+        <button class="btn btn-fill btn-state-pressed">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <!-- Focus -->
+      <div class="state-label-cell">Focus</div>
+      <div class="state-cell">
+        <button class="btn btn-fill btn-state-focus-ring">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <!-- Inactive -->
+      <div class="state-label-cell">Inactive</div>
+      <div class="state-cell">
+        <button class="btn btn-fill btn-state-inactive" disabled>
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Outline variant ──────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Outline Variant — All States</div>
+    <div class="state-grid">
+      <div class="state-grid-header">
+        <div>State</div>
+        <div>Button</div>
+      </div>
+
+      <div class="state-label-cell">Default</div>
+      <div class="state-cell">
+        <button class="btn btn-outline">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#281805" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="#281805" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <div class="state-label-cell">Hover</div>
+      <div class="state-cell">
+        <button class="btn btn-outline btn-state-hover">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#281805" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="#281805" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <div class="state-label-cell">Pressed</div>
+      <div class="state-cell">
+        <button class="btn btn-outline btn-state-pressed">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#281805" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="#281805" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <div class="state-label-cell">Focus</div>
+      <div class="state-cell">
+        <button class="btn btn-outline btn-state-focus-ring">
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#281805" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="#281805" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+
+      <div class="state-label-cell">Inactive</div>
+      <div class="state-cell">
+        <button class="btn btn-outline btn-state-inactive" disabled>
+          <span class="btn-label">Action intent</span>
+          <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#281805" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="#281805" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Interactive sandbox ──────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Interactive Sandbox — Try the buttons</div>
+    <div class="sandbox">
+      <button class="btn btn-fill">
+        <span class="btn-label">Primary action</span>
+        <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+      <button class="btn btn-outline">
+        <span class="btn-label">Secondary action</span>
+        <span class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#281805" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+      <button class="btn btn-fill" disabled>
+        <span class="btn-label">Inactive</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Token reference ──────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Design Token Reference</div>
+    <table class="token-table">
+      <thead>
+        <tr>
+          <th>Token (Figma)</th>
+          <th>CSS Custom Property</th>
+          <th>Value</th>
+          <th>Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>actions/button_default</code></td>
+          <td><code>--btn-fill-bg</code></td>
+          <td><span class="swatch" style="background:#281805"></span>#281805</td>
+          <td>Fill bg (default) · Outline border/label · Warm Black 850</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>Hover</td>
+          <td>Same bg + white 2px underline</td>
+          <td>Fill hover: no bg change. Outline hover: dark underline</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>Pressed</td>
+          <td>rgba(40, 24, 5, 0.6)</td>
+          <td>Warm Black 850 @ 60% alpha — both Fill bg and Outline border/label</td>
+        </tr>
+        <tr>
+          <td><code>actions/button_label</code></td>
+          <td><code>--btn-fill-label</code></td>
+          <td><span class="swatch" style="background:#ffffff; border-color:#ccc"></span>#ffffff</td>
+          <td>White label on Fill variant</td>
+        </tr>
+        <tr>
+          <td><code>Core Blue</code></td>
+          <td><code>--btn-focus-ring</code></td>
+          <td><span class="swatch" style="background:#0061f4"></span>#0061F4</td>
+          <td>2px outer focus stroke (both variants)</td>
+        </tr>
+        <tr>
+          <td><code>Focus surface</code></td>
+          <td><code>--btn-focus-surface</code></td>
+          <td><span class="swatch" style="background:#E0ECFE"></span>#E0ECFE</td>
+          <td>Focus state fill — replaces button bg entirely. +2px white inner border</td>
+        </tr>
+        <tr>
+          <td><code>Neutral 350</code></td>
+          <td><code>--btn-inactive-fill</code></td>
+          <td><span class="swatch" style="background:#ABABAB"></span>#ABABAB</td>
+          <td>Inactive/disabled state — flat gray, NOT opacity. Fill bg or Outline border/label</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Notes ────────────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Notes &amp; Open Questions</div>
+    <div style="background:white; border:1px solid var(--divider); border-radius:12px; padding:28px; font-size:14px; line-height:1.7; color:var(--text-sub);">
+      <p><strong style="color:var(--text-main)">Font:</strong> Figma specifies “Forever Forma Body Reg” at 16px weight 400 (Regular — not Medium). This prototype falls back to Inter while the webfont is unavailable.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">Icon:</strong> The prototype uses inline SVG placeholders (24px, matching Figma spec). Icons use <code>currentColor</code> and automatically adapt: white on dark Fill, dark on Outline, dark on Focus surface, and gray on Inactive.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">Hover:</strong> Fill and Outline hover states do NOT change the background color. The only visual change is a 2px underline appearing on the label — white for Fill, dark for Outline. Confirmed via Figma anatomy screenshot.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">Pressed:</strong> <code>rgba(40, 24, 5, 0.6)</code> — Warm Black 850 at 60% alpha. Applied to the Fill background and to the Outline border+label. Not a darker solid hex.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">Focus:</strong> A full visual transformation: Fill switches to <code>#E0ECFE</code> (Focus surface) with dark label text, a 2px white inner border, and a 2px Core Blue (<code>#0061F4</code>) outer ring. Applies to both Fill and Outline variants identically.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">Inactive:</strong> Solid <code>#ABABAB</code> (Neutral 350) — a distinct flat gray, not the resting color at reduced opacity.</p>
+      <br>
+      <p><strong style="color:var(--text-main)">State specs sourced from:</strong> Figma Sequoia Library → Governance: Styling frame → Button anatomy — via MCP live API, confirmed with screenshots on every state.</p>
+    </div>
+  </section>
+
+</body>
+</html>
