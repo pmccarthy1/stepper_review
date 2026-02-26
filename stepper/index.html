@@ -1223,6 +1223,7 @@
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Back
           </button>
+          <span id="cond-saving-chip" style="opacity:0;transition:opacity .3s;font-size:12px;color:var(--gray-600);margin-left:4px">Saving…</span>
           <button class="btn btn-primary" id="cond-next" disabled>
             Next
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2171,6 +2172,16 @@ document.getElementById('modal-confirm').addEventListener('click', () => {
     vPartlyComplete.add(vCurrent);
     vCurrent++;
     renderVStepper();
+  } else if (pendingModalStepper === 'cond') {
+    if (condPath && condCurrent > 0) {
+      const { id: stepId } = getEffectiveContent(condPath, condCurrent);
+      captureCondFields(stepId);
+      condPartlyComplete.add(stepId);
+      condCompleted.delete(stepId);
+      condCurrent++;
+      saveCondState();
+      renderCondStepper();
+    }
   }
   hideModal();
 });
@@ -2262,7 +2273,8 @@ function restoreState() {
 
 /* Saving indicator — shown when leaving a partly-complete step via backward nav */
 function showSavingIndicator(which, callback) {
-  const el = document.getElementById(which === 'h' ? 'h-saving-chip' : 'v-saving-chip');
+  const idMap = { h: 'h-saving-chip', v: 'v-saving-chip', cond: 'cond-saving-chip' };
+  const el = document.getElementById(idMap[which] || 'h-saving-chip');
   if (el) {
     el.style.opacity = '1';
     setTimeout(() => {
@@ -2275,8 +2287,12 @@ function showSavingIndicator(which, callback) {
 }
 
 /* Inline error / validation messages (in-page only, not on stepper) */
+function inlineErrorEl(which) {
+  const idMap = { h: 'h-inline-error', v: 'v-inline-error', cond: 'cond-inline-msg' };
+  return document.getElementById(idMap[which]);
+}
 function showInlineError(which, msg) {
-  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  const el = inlineErrorEl(which);
   if (!el) return;
   el.style.background = '#FFF3F3';
   el.style.border = '1.5px solid #F44336';
@@ -2285,7 +2301,7 @@ function showInlineError(which, msg) {
   el.style.display = 'block';
 }
 function hideInlineError(which) {
-  const el = document.getElementById(which === 'h' ? 'h-inline-error' : 'v-inline-error');
+  const el = inlineErrorEl(which);
   if (el) el.style.display = 'none';
 }
 
@@ -2566,60 +2582,182 @@ let condCurrent = 0;
 let condPrev    = null;
 // condSpawned[pathKey][branchKey] = { afterBaseIndex, steps[], content[], chosen } | null
 const condSpawned = {};
+// Step completion state — keyed by stable step IDs (e.g. "new_policy|base|1", "new_policy|coverage_branch|0")
+let condCompleted      = new Set();
+let condPartlyComplete = new Set();
+// Field data per step — { [stableId]: { [fieldLabel]: value } }
+let condStepData = {};
 
 /* ─── Helper: merge baseSteps + active spawns ───────────────── */
+// Returns [{ label, isSpawned, id }] where id is a stable step identifier
 function getEffectiveSteps(pathKey) {
   const path = COND_PATHS[pathKey];
   const spawns = condSpawned[pathKey] || {};
   const insertions = [];
-  for (const [, sp] of Object.entries(spawns)) {
-    if (sp) insertions.push({ abi: sp.afterBaseIndex, steps: sp.steps });
+  for (const [bKey, sp] of Object.entries(spawns)) {
+    if (sp) insertions.push({ abi: sp.afterBaseIndex, steps: sp.steps, bKey });
   }
   insertions.sort((a, b) => a.abi - b.abi);
   const result = [];
   path.baseSteps.forEach((lbl, bi) => {
-    result.push({ label: lbl, isSpawned: false });
+    result.push({ label: lbl, isSpawned: false, id: `${pathKey}|base|${bi}` });
     insertions.filter(ins => ins.abi === bi).forEach(ins => {
-      ins.steps.forEach(sl => result.push({ label: sl, isSpawned: true }));
+      ins.steps.forEach((sl, j) =>
+        result.push({ label: sl, isSpawned: true, id: `${pathKey}|${ins.bKey}|${j}` })
+      );
     });
   });
-  return result; // [{ label, isSpawned }]
+  return result;
 }
 
 /* ─── Helper: get content def for effective index ──────────── */
+// Returns { def, isSpawned, id }
 function getEffectiveContent(pathKey, effIdx) {
   const path = COND_PATHS[pathKey];
   const spawns = condSpawned[pathKey] || {};
   const insertions = [];
-  for (const [, sp] of Object.entries(spawns)) {
-    if (sp) insertions.push({ abi: sp.afterBaseIndex, content: sp.content });
+  for (const [bKey, sp] of Object.entries(spawns)) {
+    if (sp) insertions.push({ abi: sp.afterBaseIndex, content: sp.content, bKey });
   }
   insertions.sort((a, b) => a.abi - b.abi);
   let idx = 0;
   for (let bi = 0; bi < path.baseSteps.length; bi++) {
-    if (idx === effIdx) return { def: path.baseContent[bi], isSpawned: false };
+    if (idx === effIdx) return { def: path.baseContent[bi], isSpawned: false, id: `${pathKey}|base|${bi}` };
     idx++;
     const insHere = insertions.filter(i => i.abi === bi);
     for (const ins of insHere) {
-      for (const c of ins.content) {
-        if (idx === effIdx) return { def: c, isSpawned: true };
+      for (let j = 0; j < ins.content.length; j++) {
+        if (idx === effIdx) return { def: ins.content[j], isSpawned: true, id: `${pathKey}|${ins.bKey}|${j}` };
         idx++;
       }
     }
   }
-  return { def: null, isSpawned: false };
+  return { def: null, isSpawned: false, id: null };
 }
 
 /* ─── Apply a branch selection ─────────────────────────────── */
+/* --- Field capture / validation helpers --- */
+function captureCondFields(stepId) {
+  const content = document.getElementById('cond-step-content');
+  if (!content || condCurrent === 0) return;
+  const data = {};
+  content.querySelectorAll('.cond-field-row').forEach(row => {
+    const labelEl = row.querySelector('.cond-field-label');
+    const rawLabel = labelEl ? labelEl.textContent.trim() : null;
+    const key = rawLabel ? rawLabel.replace(/\u2442 condition\s*/g, '').trim() : null;
+    if (!key) return;
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input[type="text"]');
+    const chk = row.querySelector('input[type="checkbox"]');
+    if (sel)      data[key] = sel.value;
+    else if (inp) data[key] = inp.value.trim();
+    else if (chk) data[key] = chk.checked;
+  });
+  condStepData[stepId] = data;
+}
+function isFieldFilled(value, f) {
+  if (f.type === 'checkbox' || f.type === 'info') return false;
+  if (value === undefined || value === null || value === '') return false;
+  if (f.type === 'select' || f.type === 'branch-select')
+    return value !== (f.options ? f.options[0] : '');
+  return String(value).length > 0;
+}
+function isFieldComplete(value, f) {
+  if (f.type === 'info') return true;
+  if (f.type === 'checkbox') return true;
+  if (value === undefined || value === null || value === '') return false;
+  if (f.type === 'select' || f.type === 'branch-select')
+    return value !== (f.options ? f.options[0] : '');
+  return String(value).trim().length > 0;
+}
+function isCondComplete(stepId, fields) {
+  if (!fields || fields.length === 0) return true;
+  const data = condStepData[stepId] || {};
+  return fields.every(f => isFieldComplete(data[f.label], f));
+}
+function hasCondPartialData(stepId, fields) {
+  if (!fields) return false;
+  const data = condStepData[stepId] || {};
+  return fields.some(f => isFieldFilled(data[f.label], f));
+}
+function updateCondStepState(stepId, fields) {
+  if (condCompleted.has(stepId)) return;
+  if (hasCondPartialData(stepId, fields)) condPartlyComplete.add(stepId);
+  else condPartlyComplete.delete(stepId);
+}
+function saveCondState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null') || {};
+    s.condPath = condPath; s.condCurrent = condCurrent;
+    s.condCompleted = [...condCompleted]; s.condPartlyComplete = [...condPartlyComplete];
+    s.condStepData = condStepData;
+    const spawnChosen = {};
+    for (const [pk, branches] of Object.entries(condSpawned)) {
+      spawnChosen[pk] = {};
+      for (const [bk, sp] of Object.entries(branches))
+        spawnChosen[pk][bk] = sp ? { chosen: sp.chosen } : null;
+    }
+    s.condSpawnChosen = spawnChosen;
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  } catch (err) {}
+}
+function restoreCondState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (!s) return;
+    condPath    = s.condPath    ?? null;
+    condCurrent = s.condCurrent ?? 0;
+    condCompleted      = new Set(s.condCompleted    ?? []);
+    condPartlyComplete = new Set(s.condPartlyComplete ?? []);
+    condStepData = s.condStepData ?? {};
+    if (condPath && COND_PATHS[condPath] && s.condSpawnChosen?.[condPath]) {
+      condSpawned[condPath] = condSpawned[condPath] || {};
+      for (const [bKey, saved] of Object.entries(s.condSpawnChosen[condPath])) {
+        if (saved?.chosen) {
+          const bd = COND_PATHS[condPath].branches?.[bKey];
+          if (bd?.map[saved.chosen]) {
+            condSpawned[condPath][bKey] = {
+              afterBaseIndex: bd.afterBaseIndex,
+              steps:   bd.map[saved.chosen].steps,
+              content: bd.map[saved.chosen].content,
+              chosen:  saved.chosen,
+            };
+          }
+        } else {
+          condSpawned[condPath][bKey] = null;
+        }
+      }
+    }
+  } catch (err) {}
+}
+
 function applyBranch(pathKey, branchKey, chosen) {
   const branchDef = COND_PATHS[pathKey].branches[branchKey];
   if (!condSpawned[pathKey]) condSpawned[pathKey] = {};
+  // Wipe step state for steps being removed (§6.3 / §7.1)
+  const prevEntry = condSpawned[pathKey][branchKey];
+  if (prevEntry) {
+    prevEntry.steps.forEach((_, j) => {
+      const oldId = `${pathKey}|${branchKey}|${j}`;
+      condCompleted.delete(oldId);
+      condPartlyComplete.delete(oldId);
+      delete condStepData[oldId];
+    });
+  }
   const spawnEntry = branchDef.map[chosen] || null;
   condSpawned[pathKey][branchKey] = spawnEntry
     ? { afterBaseIndex: branchDef.afterBaseIndex, steps: spawnEntry.steps, content: spawnEntry.content, chosen }
     : null;
-  // Show spawn banner if steps were added
-  const banner = document.getElementById('cond-spawn-banner');
+  // §7.4 — redirect if condCurrent now points to a removed step
+  const newSteps = getEffectiveSteps(pathKey);
+  if (condCurrent >= newSteps.length) {
+    const redirectTo = newSteps.length - 1;
+    const msg = document.getElementById('cond-inline-msg');
+    msg.style.cssText = 'display:block;background:#EDE7FF;border:1.5px solid #B39DDB;color:#4527A0';
+    msg.textContent = `⑂ Your selection changed the steps. We moved you to Step ${redirectTo + 1}.`;
+    condCurrent = redirectTo;
+  }
+  const banner     = document.getElementById('cond-spawn-banner');
   const bannerText = document.getElementById('cond-spawn-banner-text');
   if (spawnEntry) {
     bannerText.textContent = `⑂ "${chosen}" added ${spawnEntry.steps.length} step${spawnEntry.steps.length > 1 ? 's' : ''} to this flow.`;
@@ -2631,44 +2769,69 @@ function applyBranch(pathKey, branchKey, chosen) {
   renderCondTrack(pathKey);
   renderCondSpawnPill(pathKey);
   renderBranchMap(pathKey);
+  saveCondState();
 }
 
 /* ─── Render just the stepper track ────────────────────────── */
 function renderCondTrack(pathKey) {
   const track = document.getElementById('cond-stepper-track');
   if (!pathKey) {
-    track.innerHTML = `<div class="h-step is-current"><div class="h-step-inner"><div class="h-dot current"><span class="dot-normal"><span style="font-size:13px">1</span></span></div><span class="h-label" style="color:var(--gray-900);font-weight:700">Request Type</span></div></div>`;
+    track.innerHTML = `<div class="h-step is-current" aria-current="step"><div class="h-step-inner"><div class="h-dot current" style="width:32px;height:32px"><span class="dot-normal"><span style="font-size:13px">1</span></span></div><span class="h-label" style="color:var(--gray-900);font-weight:700">Request Type</span></div></div>`;
     return;
   }
   const steps = getEffectiveSteps(pathKey);
   track.innerHTML = '';
-  steps.forEach(({ label, isSpawned }, i) => {
+  steps.forEach(({ label, isSpawned, id }, i) => {
     if (i > 0) {
       const line = document.createElement('div');
-      line.className = 'h-connector' + (i <= condCurrent ? ' complete' : '') + (isSpawned ? ' spawned' : '');
+      const prevId = steps[i - 1].id;
+      const prevDone = condCompleted.has(prevId) || condPartlyComplete.has(prevId);
+      line.className = 'h-connector' + (prevDone ? ' complete' : '') + (isSpawned ? ' spawned' : '');
       track.appendChild(line);
     }
-    const isComplete = i < condCurrent;
+    const isComplete = condCompleted.has(id) && i !== condCurrent;
+    const isPartly   = condPartlyComplete.has(id) && i !== condCurrent;
     const isCurrent  = i === condCurrent;
-    const isFuture   = i > condCurrent;
+    const isFuture   = !isComplete && !isPartly && !isCurrent;
     let cls = 'h-step';
     if (isCurrent)  cls += ' is-current';
-    if (isComplete) cls += ' is-complete';
+    if (isComplete) cls += ' is-complete is-hoverable';
+    if (isPartly)   cls += ' is-partly-complete is-hoverable';
     if (isFuture)   cls += ' is-future';
     if (isSpawned)  cls += ' is-spawned';
     const step = document.createElement('div');
     step.className = cls;
-    const dotState = isComplete ? 'complete' : isCurrent ? 'current' : 'incomplete';
+    if (isCurrent) step.setAttribute('aria-current', 'step');
+    if (isFuture)  { step.setAttribute('aria-disabled', 'true'); step.setAttribute('tabindex', '-1'); }
+    const dotState = isComplete ? 'complete' : isPartly ? 'partly-complete' : isCurrent ? 'current' : 'incomplete';
     const dotCls   = dotState + (isSpawned ? ' spawned' : '');
-    const lColor   = isCurrent ? 'var(--gray-900)' : isComplete ? 'var(--gray-600)' : isSpawned ? '#4527A0' : 'var(--gray-400)';
+    const lColor   = isCurrent ? 'var(--gray-900)' : (isComplete || isPartly) ? 'var(--gray-600)' : isSpawned ? '#4527A0' : 'var(--gray-400)';
     const lWeight  = isCurrent ? '700' : '400';
+    let dotIcon;
+    if (isComplete)    dotIcon = svgCheck();
+    else if (isPartly) dotIcon = svgDash('white');
+    else               dotIcon = `<span style="font-size:13px">${i + 1}</span>`;
     step.innerHTML = `
       <div class="h-step-inner">
-        <div class="h-dot ${dotCls}">
-          <span class="dot-normal">${isComplete ? svgCheck() : `<span style="font-size:13px">${i+1}</span>`}</span>
+        <div class="h-dot ${dotCls}" style="width:32px;height:32px">
+          <span class="dot-normal">${dotIcon}</span>
         </div>
         <span class="h-label" style="color:${lColor};font-weight:${lWeight}">${label}</span>
       </div>`;
+    // Backward navigation via clicking complete/partly-complete steps (§1.2)
+    if (i < condCurrent && (isComplete || isPartly)) {
+      step.style.cursor = 'pointer';
+      step.addEventListener('click', () => {
+        const { def: leavingDef, id: leavingId } = getEffectiveContent(pathKey, condCurrent);
+        captureCondFields(leavingId);
+        updateCondStepState(leavingId, leavingDef?.fields);
+        const wasPartly = condPartlyComplete.has(leavingId);
+        saveCondState();
+        condCurrent = i;
+        if (wasPartly) showSavingIndicator('cond', () => renderCondStepper());
+        else renderCondStepper();
+      });
+    }
     track.appendChild(step);
   });
 }
@@ -2700,11 +2863,12 @@ function renderBranchMap(pathKey) {
   const spawns = condSpawned[pathKey] || {};
   mapTag.textContent = `${path.label} · ${steps.length} steps`;
 
-  // Step chips row
+  // Step chips row (with state badges)
   let chipsHtml = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:24px">';
-  steps.forEach(({ label, isSpawned }, i) => {
+  steps.forEach(({ label, isSpawned, id }, i) => {
     if (i > 0) chipsHtml += '<span style="color:var(--gray-400);font-size:11px">→</span>';
-    chipsHtml += `<span class="branch-map-step${isSpawned ? ' spawned' : ''}">${label}</span>`;
+    const badge = condCompleted.has(id) ? ' ✓' : condPartlyComplete.has(id) ? ' ·' : '';
+    chipsHtml += `<span class="branch-map-step${isSpawned ? ' spawned' : ''}">${label}${badge}</span>`;
   });
   chipsHtml += '</div>';
 
@@ -2833,11 +2997,140 @@ function renderCondStepper() {
   }
 
   /* ── Steps 1+: form content ── */
-  const { def: stepDef, isSpawned } = getEffectiveContent(condPath, condCurrent);
+  const { def: stepDef, isSpawned, id: stepId } = getEffectiveContent(condPath, condCurrent);
   if (!stepDef) { content.innerHTML = ''; return; }
+  const savedData = condStepData[stepId] || {};
 
-  // Retrieve saved branch-select values for this path
-  const savedSelects = (condSpawned[condPath] && Object.values(condSpawned[condPath])) || [];
+  let fieldsHtml = '';
+  (stepDef.fields || []).forEach(f => {
+    if (f.type === 'checkbox') {
+      const ckd = savedData[f.label] === true ? ' checked' : '';
+      fieldsHtml += `<div class="cond-field-row"><label style="display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--blue-primary)"${ckd}>${f.label}</label></div>`;
+    } else if (f.type === 'branch-select') {
+      const sp = (condSpawned[condPath] || {})[f.branchKey];
+      const chosenVal = sp ? sp.chosen : (savedData[f.label] || null);
+      const opts = f.options.map(o => `<option${o === chosenVal ? ' selected' : ''}>${o}</option>`).join('');
+      fieldsHtml += `
+        <div class="cond-field-row" style="border-left:3px solid #B39DDB;padding-left:10px;background:#FAF7FF;border-radius:0 6px 6px 0">
+          <span class="cond-field-label">${f.label}<span class="branch-trigger-tag">\u2442 condition</span></span>
+          <select class="cond-field-select" data-branch-key="${f.branchKey}" style="border-color:#B39DDB">${opts}</select>
+          <div style="font-size:11px;color:#7B52C8;margin-top:4px">${f.hint || ''}</div>
+        </div>`;
+    } else if (f.type === 'select') {
+      const sv = savedData[f.label] || '';
+      const opts = f.options.map(o => `<option${o === sv ? ' selected' : ''}>${o}</option>`).join('');
+      fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><select class="cond-field-select">${opts}</select></div>`;
+    } else if (f.type === 'info') {
+      fieldsHtml += `<div style="padding:10px 14px;background:#F0F5FF;border-radius:6px;font-size:13px;color:var(--gray-600);margin-bottom:8px">\u2139\ufe0f ${f.label}</div>`;
+    } else {
+      const sv = (savedData[f.label] || '').toString().replace(/"/g, '&quot;');
+      fieldsHtml += `<div class="cond-field-row"><span class="cond-field-label">${f.label}</span><input type="text" class="cond-field-input" value="${sv}" placeholder="${f.placeholder || ''}"></div>`;
+    }
+  });
+
+  const spawnBadge = isSpawned ? `<span class="branch-trigger-tag" style="margin-left:8px;font-size:10px;background:#EDE7FF;border-color:#B39DDB;color:#4527A0">\u2442 sub-path step</span>` : '';
+  content.innerHTML = `<h4 style="${isSpawned ? 'color:#4527A0' : ''}">${stepDef.title}${spawnBadge}</h4>${fieldsHtml}`;
+
+  content.querySelectorAll('select[data-branch-key]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      captureCondFields(stepId);
+      applyBranch(condPath, sel.dataset.branchKey, sel.value);
+    });
+  });
+
+  renderCondSpawnPill(condPath);
+  renderBranchMap(condPath);
+  document.getElementById('cond-inline-msg').style.display = 'none';
+}
+
+document.getElementById('cond-next').addEventListener('click', () => {
+  const msg = document.getElementById('cond-inline-msg');
+  if (condCurrent === 0) {
+    if (!condPath) {
+      msg.style.cssText = 'display:block;background:#FFF3F3;border:1.5px solid #F44336;color:#B71C1C';
+      msg.textContent = 'Please select a request type before continuing.';
+      return;
+    }
+    condCompleted.add(`${condPath}|base|0`);
+    condPartlyComplete.delete(`${condPath}|base|0`);
+    condCurrent++;
+    saveCondState();
+    renderCondStepper();
+    return;
+  }
+  const effSteps = getEffectiveSteps(condPath);
+  const { def: sDef, id: sId } = getEffectiveContent(condPath, condCurrent);
+  captureCondFields(sId);
+  if (condCurrent === effSteps.length - 1) {
+    if (!isCondComplete(sId, sDef?.fields)) {
+      if (hasCondPartialData(sId, sDef?.fields)) { showModal('cond'); return; }
+      msg.style.cssText = 'display:block;background:#FFF3F3;border:1.5px solid #F44336;color:#B71C1C';
+      msg.textContent = 'Please complete the required fields before submitting.';
+      return;
+    }
+    condCompleted.add(sId);
+    condPartlyComplete.delete(sId);
+    const unfinished = effSteps.slice(0, -1).filter(s => !condCompleted.has(s.id));
+    if (unfinished.length > 0) {
+      const firstIdx = effSteps.indexOf(unfinished[0]);
+      msg.style.cssText = 'display:block;background:#FFF3F3;border:1.5px solid #F44336;color:#B71C1C';
+      msg.innerHTML = `<strong>Submission blocked.</strong> ${unfinished.length} step${unfinished.length > 1 ? 's are' : ' is'} unfinished. ` +
+        `<a href="#" class="cond-go-unfinished" data-idx="${firstIdx}" style="color:#0057FF;text-decoration:underline;cursor:pointer">Go to first unfinished step \u2192</a>`;
+      saveCondState();
+      renderCondTrack(condPath);
+      return;
+    }
+    msg.style.cssText = 'display:block;background:#E8F5E9;border:1.5px solid #4CAF50;color:#1B5E20';
+    msg.innerHTML = '\u2705 <strong>Submitted successfully!</strong> All steps are complete.';
+    saveCondState();
+    renderCondTrack(condPath);
+    return;
+  }
+  if (isCondComplete(sId, sDef?.fields)) {
+    condCompleted.add(sId);
+    condPartlyComplete.delete(sId);
+    condCurrent++;
+    saveCondState();
+    renderCondStepper();
+  } else if (hasCondPartialData(sId, sDef?.fields)) {
+    showModal('cond');
+  } else {
+    msg.style.cssText = 'display:block;background:#FFF3F3;border:1.5px solid #F44336;color:#B71C1C';
+    msg.textContent = 'Please complete the required fields before continuing.';
+  }
+});
+
+document.getElementById('cond-back').addEventListener('click', () => {
+  if (condCurrent === 0) return;
+  if (condPath && condCurrent > 0) {
+    const { def: sDef, id: sId } = getEffectiveContent(condPath, condCurrent);
+    captureCondFields(sId);
+    updateCondStepState(sId, sDef?.fields);
+    const wasPartly = condPartlyComplete.has(sId);
+    saveCondState();
+    condCurrent--;
+    if (wasPartly) showSavingIndicator('cond', () => renderCondStepper());
+    else renderCondStepper();
+  } else {
+    condCurrent--;
+    renderCondStepper();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('.cond-go-unfinished');
+  if (!a) return;
+  e.preventDefault();
+  document.getElementById('cond-inline-msg').style.display = 'none';
+  condCurrent = parseInt(a.dataset.idx);
+  renderCondStepper();
+});
+
+restoreCondState();
+renderCondStepper();
+</script>
+</body>
+</html>
 
   let fieldsHtml = '';
   (stepDef.fields || []).forEach(f => {
